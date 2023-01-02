@@ -9,7 +9,7 @@ import {stdError} from "forge-std/Test.sol";
 import {ArtGobblers, FixedPointMathLib} from "../src/ArtGobblers.sol";
 import {Goo} from "../src/Goo.sol";
 import {Pages} from "../src/Pages.sol";
-import {GooblerReserve} from "../src/utils/GobblerReserve.sol";
+import {GobblerReserve} from "../src/utils/GobblerReserve.sol";
 import {RandProvider} from "../src/utils/rand/RandProvider.sol";
 import {ChainlinkV1RandProvider} from "../src/utils/rand/ChainlinkV1RandProvider.sol";
 import {LinkToken} from "./utils/mocks/LinkToken.sol";
@@ -20,7 +20,7 @@ import {LibString} from "solmate/utils/LibString.sol";
 import {fromDaysWadUnsafe} from "solmate/utils/SignedWadMath.sol";
 
 /// @notice Unit test for Art Gobbler Contract.
-contract ArtGobblers is DSTestPlus {
+contract ArtGobblersTest is DSTestPlus {
     using LibString for uint256;
     Vm internal immutable vm = Vm(HEVM_ADDRESS);
 
@@ -45,7 +45,7 @@ contract ArtGobblers is DSTestPlus {
 
     function setUp() public {
         utils = new Utilities();
-        users = new utils.createUsers(5);
+        users = utils.createUsers(5);
         linkToken = new LinkToken();
         vrfCoordinator = new VRFCoordinatorMock(address(linkToken));
 
@@ -54,7 +54,7 @@ contract ArtGobblers is DSTestPlus {
         address pagesAddress = utils.predictContractAddress(address(this), 5);
 
         team = new GobblerReserve(ArtGobblers(gobblerAddress), address(this));
-        community = new GooblerReserve(ArtGobblers(gobblerAddress), address(this));
+        community = new GobblerReserve(ArtGobblers(gobblerAddress), address(this));
         randProvider = new ChainlinkV1RandProvider(
             ArtGobblers(gobblerAddress),
             address(vrfCoordinator),
@@ -67,7 +67,7 @@ contract ArtGobblers is DSTestPlus {
             //gobblers
             utils.predictContractAddress(address(this), 1),
             //Pages
-            utils.predictContractAddress(address(this), 2),
+            utils.predictContractAddress(address(this), 2)
         );
 
         gobblers = new ArtGobblers(
@@ -80,7 +80,7 @@ contract ArtGobblers is DSTestPlus {
             randProvider,
             "base",
             "",
-            keccak256(abi.encodePacked("provenance")),
+            keccak256(abi.encodePacked("provenance"))
         );
 
         pages = new Pages(
@@ -88,7 +88,7 @@ contract ArtGobblers is DSTestPlus {
             goo, 
             address(0xBEEF),
             gobblers,
-            "",
+            ""
         );
     }
 
@@ -101,6 +101,17 @@ contract ArtGobblers is DSTestPlus {
         bytes32[] memory proof;
         vm.prank(user);
         vm.expectRevert(ArtGobblers.MintStartPending.selector);
-        gobblers.claimGobblers(proof);
+        gobblers.claimGobbler(proof);
+    }
+
+    /// @notice test that you can mint from mintlisr successfully
+    function testMintFromMintlist() public {
+        address user = users[0];
+        bytes32[] memory proof;
+        vm.prank(user);
+        gobblers.claimGobbler(proof);
+        // verify gobbler ownership
+        assertEq(gobblers.ownerOf(1), user);
+        assertEq(gobblers.balanceOf(user), 1);
     }
 }
