@@ -177,6 +177,13 @@ contract ArtGobblersTest is DSTestPlus {
         assertEq(paidGoo, gobblerPrice);
     }
 
+    /// @notice Test that you can't mint with insufficient balance
+    function testMintFromBalanceInsufficient() public {
+        vm.prank(users[0]);
+        vm.expectRevert(stdError.arithmeticError);
+        gobblers.mintFromGoo(type(uint256).max, true);
+    }
+
     /// @notice Call back vrf with randomness and reveal gobblers.
     function setRandomnessAndReveal(uint256 numReveal, string memory seed) internal {
         bytes32 requestId = gobblers.requestRandomSeed();
