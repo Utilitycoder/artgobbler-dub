@@ -114,4 +114,39 @@ contract ArtGobblersTest is DSTestPlus {
         assertEq(gobblers.ownerOf(1), user);
         assertEq(gobblers.balanceOf(user), 1);
     }
+
+    /// @notice Test that minting from the mintlist twice fails.
+    function testMintingFromMintlistTwiceFails() public {
+        address user = users[0];
+        bytes32[] memory proof;
+        vm.startPrank(user);
+        gobblers.claimGobbler(proof);
+
+        vm.expectRevert(ArtGobblers.AlreadyClaimed.selector);
+        gobblers.claimGobbler(proof);
+    }
+
+    /// @notice Test that an invalid mintlist proof reverts
+    function testMintNotInMintlist() public {
+        bytes32[] memory proof;
+        vm.expectRevert(ArtGobblers.InvalidProof.selector);
+        gobblers.claimGobbler(proof);
+    }
+
+    /// @notice Test that you can successfully mint from goo. 
+    function testMintFromGoo() public {
+        uint256 cost = gobblers.gobblerPrice();
+        vm.prank(address(gobblers));
+        goo.mintForGobblers(users[0], cost);
+        vm.prank(users[0]);
+        gobblers.mintFromGoo(type(uint256).max, false);
+        assertEq(gobblers.ownerOf(1), users[0]);
+    }
+
+    /// @notice test that trying to mint with insufficient balance reverts. 
+    function testMintInsufficientBalance() public {
+        vm.prank(users[0]);
+        vm.expectRevert(stdError.arithmeticError);
+        gobblers.mintFromGoo(type(uint256).max, false);
+    }
 }
