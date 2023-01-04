@@ -83,13 +83,7 @@ contract ArtGobblersTest is DSTestPlus {
             keccak256(abi.encodePacked("provenance"))
         );
 
-        pages = new Pages(
-            block.timestamp, 
-            goo, 
-            address(0xBEEF),
-            gobblers,
-            ""
-        );
+        pages = new Pages(block.timestamp, goo, address(0xBEEF), gobblers, "");
     }
 
     ///////// MINT TESTS ///////////
@@ -133,7 +127,7 @@ contract ArtGobblersTest is DSTestPlus {
         gobblers.claimGobbler(proof);
     }
 
-    /// @notice Test that you can successfully mint from goo. 
+    /// @notice Test that you can successfully mint from goo.
     function testMintFromGoo() public {
         uint256 cost = gobblers.gobblerPrice();
         vm.prank(address(gobblers));
@@ -143,10 +137,52 @@ contract ArtGobblersTest is DSTestPlus {
         assertEq(gobblers.ownerOf(1), users[0]);
     }
 
-    /// @notice test that trying to mint with insufficient balance reverts. 
+    /// @notice test that trying to mint with insufficient balance reverts.
     function testMintInsufficientBalance() public {
         vm.prank(users[0]);
         vm.expectRevert(stdError.arithmeticError);
         gobblers.mintFromGoo(type(uint256).max, false);
+    }
+
+    /// @notice Test that you can successfully mint from goo.
+    function testMintFromGooBalance() public {
+        uint256 cost = gobblers.gobblerPrice();
+        // mint initial gobbler
+        vm.prank(address(gobblers));
+        goo.mintForGobblers(users[0], cost);
+        vm.prank(users[0]);
+        gobblers.mintFromGoo(type(uint256).max, false);
+        assertEq(gobblers.balanceOf(users[0]), 1);
+        //warp for reveals
+        vm.warp(block.timestamp + 1 days);
+        setRandomnessAndReveal(1, "seed");
+        //warp until balance is larger than cost
+        vm.warp(block.timestamp + 3 days);
+        uint256 userBalance = goo.balanceOf(users[0]);
+        console.log(userBalance);
+        uint256 initialBalance = gobblers.gooBalance(users[0]);
+        uint256 gobblerPrice = gobblers.gobblerPrice();
+        console.log("gobblerPrice", gobblerPrice);
+        assertTrue(initialBalance > gobblerPrice);
+        console.log("newPrice", gobblerPrice);
+        console.log("balance", initialBalance);
+        //mint from balance
+        vm.prank(users[0]);
+        gobblers.mintFromGoo(type(uint256).max, true);
+        //assert owner is correct
+        assertEq(gobblers.ownerOf(2), users[0]);
+        //assert balance went up by expected amount
+        uint256 finalBalance = gobblers.gooBalance(users[0]);
+        uint256 paidGoo = initialBalance - finalBalance;
+        assertEq(paidGoo, gobblerPrice);
+    }
+
+    /// @notice Call back vrf with randomness and reveal gobblers.
+    function setRandomnessAndReveal(uint256 numReveal, string memory seed) internal {
+        bytes32 requestId = gobblers.requestRandomSeed();
+        uint256 randomness = uint256(keccak256(abi.encodePacked(seed)));
+        // call back from coordinator
+        vrfCoordinator.callBackWithRandomness(requestId, randomness, address(randProvider));
+        gobblers.revealGobblers(numReveal);
     }
 }
