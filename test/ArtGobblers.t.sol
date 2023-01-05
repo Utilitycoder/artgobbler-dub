@@ -203,6 +203,38 @@ contract ArtGobblersTest is DSTestPlus {
         assertRelApproxEq(cost, uint256(gobblers.targetPrice()), 0.00001e18);
     }
 
+    /// @notice Test that minting resolved gobblers fails if there are no mints. 
+    function testMintReservedGobblersFailsWithNoMints() public {
+        vm.expectRevert(ArtGobblers.ReserveImbalance.selector);
+        gobblers.mintReservedGobblers(1);
+    }
+
+    /// @notice Test that reserved gobblers can be minted under fair circumstances. 
+    function testCanMintReserved() public {
+        mintGobblerToAddress(users[0], 8);
+        gobblers.mintReservedGobblers(1);
+        assertEq(gobblers.ownerOf(9), address(team));
+        assertEq(gobblers.ownerOf(10), address(community));
+        assertEq(gobblers.balanceOf(address(team)), 1);
+        assertEq(gobblers.balanceOf(address(community)), 1);
+    }
+
+    /// @notice Mint a number of gobblers to the given address
+    function mintGobblerToAddress(address addr, uint256 num) internal {
+        for (uint256 i = 0; i < num; ++i) {
+            vm.startPrank(address(gobblers));
+            goo.mintForGobblers(addr, gobblers.gobblerPrice());
+            vm.stopPrank();
+
+            uint256 gobblersOwnedBefore = gobblers.balanceOf(addr);
+
+            vm.prank(addr);
+            gobblers.mintFromGoo(type(uint256).max, false);
+
+            assertEq(gobblers.balanceOf(addr), gobblersOwnedBefore + 1);
+        }
+    }
+
     /// @notice Call back vrf with randomness and reveal gobblers.
     function setRandomnessAndReveal(uint256 numReveal, string memory seed) internal {
         bytes32 requestId = gobblers.requestRandomSeed();
