@@ -184,16 +184,7 @@ contract ArtGobblersTest is DSTestPlus {
         gobblers.mintFromGoo(type(uint256).max, true);
     }
 
-    /// @notice Call back vrf with randomness and reveal gobblers.
-    function setRandomnessAndReveal(uint256 numReveal, string memory seed) internal {
-        bytes32 requestId = gobblers.requestRandomSeed();
-        uint256 randomness = uint256(keccak256(abi.encodePacked(seed)));
-        // call back from coordinator
-        vrfCoordinator.callBackWithRandomness(requestId, randomness, address(randProvider));
-        gobblers.revealGobblers(numReveal);
-    }
-
-    /// @notice Test that if mint price exceeds max it reverts. 
+    /// @notice Test that if mint price exceeds max it reverts.
     function testMintPriceExceededMax() public {
         uint256 cost = gobblers.gobblerPrice();
         vm.prank(address(gobblers));
@@ -201,5 +192,23 @@ contract ArtGobblersTest is DSTestPlus {
         vm.prank(users[0]);
         vm.expectRevert(abi.encodeWithSelector(ArtGobblers.PriceExceededMax.selector, cost)); // we won't use encodeWithSelector if the custom error doesn't take a parameter
         gobblers.mintFromGoo(cost - 1, false);
+    }
+
+    /// @notice Test that the initial gobbler price is what we expect. 
+    function testInitialGobblerPrice() public {
+        // warp to the largest sale time so that the gobbler price equals the target price. 
+        vm.warp(block.timestamp + fromDaysWadUnsafe(gobblers.getTargetSaleTime(1e18)));
+
+        uint256 cost = gobblers.gobblerPrice();
+        assertRelApproxEq(cost, uint256(gobblers.targetPrice()), 0.00001e18);
+    }
+
+    /// @notice Call back vrf with randomness and reveal gobblers.
+    function setRandomnessAndReveal(uint256 numReveal, string memory seed) internal {
+        bytes32 requestId = gobblers.requestRandomSeed();
+        uint256 randomness = uint256(keccak256(abi.encodePacked(seed)));
+        // call back from coordinator
+        vrfCoordinator.callBackWithRandomness(requestId, randomness, address(randProvider));
+        gobblers.revealGobblers(numReveal);
     }
 }
