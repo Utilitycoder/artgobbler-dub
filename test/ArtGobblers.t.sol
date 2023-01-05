@@ -192,4 +192,14 @@ contract ArtGobblersTest is DSTestPlus {
         vrfCoordinator.callBackWithRandomness(requestId, randomness, address(randProvider));
         gobblers.revealGobblers(numReveal);
     }
+
+    /// @notice Test that if mint price exceeds max it reverts. 
+    function testMintPriceExceededMax() public {
+        uint256 cost = gobblers.gobblerPrice();
+        vm.prank(address(gobblers));
+        goo.mintForGobblers(users[0], cost);
+        vm.prank(users[0]);
+        vm.expectRevert(abi.encodeWithSelector(ArtGobblers.PriceExceededMax.selector, cost)); // we won't use encodeWithSelector if the custom error doesn't take a parameter
+        gobblers.mintFromGoo(cost - 1, false);
+    }
 }
