@@ -219,6 +219,19 @@ contract ArtGobblersTest is DSTestPlus {
         assertEq(gobblers.balanceOf(address(community)), 1);
     }
 
+    /// @notice Test multiple reserved gobblers can be minted under fair circumstances. 
+    function testCanMintMultipleReserved() public {
+        mintGobblerToAddress(users[0], 18);
+
+        gobblers.mintReservedGobblers(2);
+        assertEq(gobblers.ownerOf(19), address(team));
+        assertEq(gobblers.ownerOf(20), address(team));
+        assertEq(gobblers.ownerOf(21), address(community));
+        assertEq(gobblers.ownerOf(22), address(community));
+        assertEq(gobblers.balanceOf(address(team)), 2);
+        assertEq(gobblers.balanceOf(address(community)), 2);
+    }
+
     /// @notice Mint a number of gobblers to the given address
     function mintGobblerToAddress(address addr, uint256 num) internal {
         for (uint256 i = 0; i < num; ++i) {
