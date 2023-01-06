@@ -232,6 +232,13 @@ contract ArtGobblersTest is DSTestPlus {
         assertEq(gobblers.balanceOf(address(community)), 2);
     }
 
+    /// @notice Test minting reserved gobblers fails if not enough have gobblers been minted. 
+    function testCantMintTooFastReserved() public {
+        mintGobblerToAddress(users[0], 18);
+
+        vm.expectRevert(ArtGobblers.ReserveImbalance.selector);
+        gobblers.mintReservedGobblers(3);
+    }
     /// @notice Mint a number of gobblers to the given address
     function mintGobblerToAddress(address addr, uint256 num) internal {
         for (uint256 i = 0; i < num; ++i) {
