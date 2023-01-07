@@ -239,6 +239,28 @@ contract ArtGobblersTest is DSTestPlus {
         vm.expectRevert(ArtGobblers.ReserveImbalance.selector);
         gobblers.mintReservedGobblers(3);
     }
+
+    /// @notice Test minting reserved gobblers fails one by one if not enough  have gobblers been minted. 
+    function testCantMintTooFastReservedOneByOne() public {
+        mintGobblerToAddress(users[0], 90);
+
+        gobblers.mintReservedGobblers(1);
+        gobblers.mintReservedGobblers(1);
+        gobblers.mintReservedGobblers(1);
+        gobblers.mintReservedGobblers(1);
+        gobblers.mintReservedGobblers(1);
+        gobblers.mintReservedGobblers(1);
+        gobblers.mintReservedGobblers(1);
+        gobblers.mintReservedGobblers(1);
+        gobblers.mintReservedGobblers(1);
+        gobblers.mintReservedGobblers(1);
+        gobblers.mintReservedGobblers(1);
+
+        vm.expectRevert(ArtGobblers.ReserveImbalance.selector);
+        gobblers.mintReservedGobblers(1);
+
+    }
+
     /// @notice Mint a number of gobblers to the given address
     function mintGobblerToAddress(address addr, uint256 num) internal {
         for (uint256 i = 0; i < num; ++i) {
