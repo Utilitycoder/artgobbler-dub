@@ -305,7 +305,31 @@ contract ArtGobblersTest is DSTestPlus {
         pages.mintFromGoo(type(uint256).max, true);
     }
 
+    /////////////////// PRICING TEST //////////////////
 
+    /// @notice Test VRGDA behaviour when selling at target rate
+    function testPricingBasic() public {
+        // VRGDA targets this number of mints at given time.
+        uint256 timeDelta = 120 days;
+        uint256 numMint = 876;
+
+        vm.warp(block.timestamp + timeDelta);
+
+        for (uint256 i = 0; i < numMint; ++i) {
+            vm.startPrank(address(gobblers));
+            uint256 price = gobblers.gobblerPrice();
+            goo.mintForGobblers(users[0], price);
+            vm.stopPrank();
+            vm.prank(users[0]);
+            gobblers.mintFromGoo(price, false);
+        }
+
+        uint256 targetPrice = uint256(gobblers.targetPrice());
+        uint256 finalPrice = gobblers.gobblerPrice();
+
+        // Equal within 3 percent since num mint is rounded from true decimal amount. 
+        assertRelApproxEq(finalPrice, targetPrice, 0.03e18);
+    }
 
     /// @notice Mint a number of gobblers to the given address
     function mintGobblerToAddress(address addr, uint256 num) internal {
