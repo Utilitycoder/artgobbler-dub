@@ -258,8 +258,54 @@ contract ArtGobblersTest is DSTestPlus {
 
         vm.expectRevert(ArtGobblers.ReserveImbalance.selector);
         gobblers.mintReservedGobblers(1);
-
     }
+
+    /// @notice Test that user can mint page with their virtual balance. 
+    function testCanMintPageFromVirtualBalance() public {
+        uint256 cost = gobblers.gobblerPrice();
+        //mint initial gobbler
+        vm.prank(address(gobblers));
+        goo.mintForGobblers(users[0], cost);
+        vm.prank(users[0]);
+        gobblers.mintFromGoo(type(uint256).max, false);
+        //warp for reveals
+        vm.warp(block.timestamp + 1 days);
+        setRandomnessAndReveal(1, "seed");
+        //warp until balance is larger than cost
+        vm.warp(block.timestamp + 3 days);
+        uint256 initialBalance = gobblers.gooBalance(users[0]);
+        uint256 pagePrice = pages.pagePrice();
+        console.log(pagePrice);
+        assertTrue(initialBalance > pagePrice);
+        //Mint from balance 
+        vm.prank(users[0]);
+        pages.mintFromGoo(type(uint256).max, true);
+        //assert owner is correct
+        assertEq(pages.ownerOf(1), users[0]);
+        //assert balance went down by expected amount.
+        uint256 finalBalance = gobblers.gooBalance(users[0]);
+        uint256 paidGoo = initialBalance - finalBalance;
+        assertEq(paidGoo, pagePrice);
+    }
+
+    function testCannotMintPageWithInsufficientBalance() public {
+        uint256 cost = gobblers.gobblerPrice();
+        // mint initial balance. 
+        vm.prank(address(gobblers));
+        goo.mintForGobblers(users[0], cost);
+        vm.prank(users[0]);
+        gobblers.mintFromGoo(type(uint256).max, false);
+        //warp for reveals
+        vm.warp(block.timestamp + 1 days);
+        setRandomnessAndReveal(1, "seed");
+        // try to mint from balance
+        vm.prank(users[0]);
+        console.log(goo.balanceOf(users[0]));
+        vm.expectRevert(stdError.arithmeticError);
+        pages.mintFromGoo(type(uint256).max, true);
+    }
+
+
 
     /// @notice Mint a number of gobblers to the given address
     function mintGobblerToAddress(address addr, uint256 num) internal {
