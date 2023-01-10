@@ -331,6 +331,14 @@ contract ArtGobblersTest is DSTestPlus {
         assertRelApproxEq(finalPrice, targetPrice, 0.03e18);
     }
 
+    /// @notice Pricing function should NOT revert when trying to price the last mintable gobbler.
+    function testDoesNotRevertEarly() public {
+        //This is the last gobbler we expect to mint. 
+        int256 maxMintable = int256(gobblers.MAX_MINTABLE()) * 1e18;
+        //This call should NOT revert, since we should have a target date for the last mintable gobbler. 
+        gobblers.getTargetSaleTime(maxMintable);
+    }
+
     /// @notice Mint a number of gobblers to the given address
     function mintGobblerToAddress(address addr, uint256 num) internal {
         for (uint256 i = 0; i < num; ++i) {
