@@ -348,7 +348,19 @@ contract ArtGobblersTest is DSTestPlus {
         gobblers.getTargetSaleTime(maxMintablePlusOne);
     }
 
-
+    ////////////// LEGENDARY GOBBLERS ////////////
+    
+    /// @notice Test that attempting to mint before start time reverts. 
+    function testLegendaryGobblerMintBeforeStart() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ArtGobblers.LegendaryAuctionNotStarted.selector, 
+                gobblers.LEGENDARY_AUCTION_INTERVAL()
+            )
+        );
+        vm.prank(users[0]);
+        gobblers.mintLegendaryGobbler(ids);
+    }
 
     /// @notice Mint a number of gobblers to the given address
     function mintGobblerToAddress(address addr, uint256 num) internal {
