@@ -371,7 +371,24 @@ contract ArtGobblersTest is DSTestPlus {
         assertEq(cost, 69);
     }
 
-    
+    /// @notice Test that auction ends at a price of 0. 
+    function testLegendaryGobblerFinalPrice() public {
+        // Mint 2 full intervals.
+        mintGobblerToAddress(users[0], gobblers.LEGENDARY_AUCTION_INTERVAL() * 2);
+        uint256 cost = gobblers.legendaryGobblerPrice();
+        // Auction price should be 0 after full interval decay. 
+        assertEq(cost, 0);
+    }
+
+    /// @notice Test that auction ends at a price of 0 even after the interval. 
+    function testLegendaryGobblerPastFinalPrice() public {
+        // Mint 3 full intervals. 
+        vm .warp(block.timestamp + 600 days);
+        mintGobblerToAddress(users[0], gobblers.LEGENDARY_AUCTION_INTERVAL() * 3);
+        uint256 cost = gobblers.legendaryGobblerPrice();
+        // Auction price should be 0 after full interval decay.
+        assertEq(cost, 0);
+    }
 
 
 
