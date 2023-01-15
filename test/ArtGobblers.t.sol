@@ -390,6 +390,28 @@ contract ArtGobblersTest is DSTestPlus {
         assertEq(cost, 0);
     }
 
+    /// @notice Test that mid price happens when we expect. 
+    function testLegendaryGobblerMidPrice() public {
+        // Mint first interval and half of second interval. 
+        mintGobblerToAddress(users[0], FixedPointMathLib.unsafeDivUp(gobblers.LEGENDARY_AUCTION_INTERVAL() * 3, 2));
+        uint256 cost = gobblers.legendaryGobblerPrice();
+        // Auction price should be cut by half mid way through auction. 
+        assertEq(cost, 35);
+    }
+
+    /// @notice Test that target price doesn't fall below what we exoect. 
+    function testLegendaryGobblerMinStartPrice() public {
+        // Mint two full intervals, such that price of first auction goes to zero. 
+        mintGobblerToAddress(users[0], gobblers.LEGENDARY_AUCTION_INTERVAL() * 2);
+        //Empty id list. 
+        uint256[] memory _ids;
+        //Mint first auction at zero cost. 
+        gobblers.mintLegendaryGobbler(_ids);
+        // Start cost of next auction, which should equal 69. 
+        uint256 startCost = gobblers.legendaryGobblerPrice();
+        assertEq(startCost, 69);
+    }
+
 
 
     /// @notice Mint a number of gobblers to the given address
