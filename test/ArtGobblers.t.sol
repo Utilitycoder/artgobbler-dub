@@ -362,6 +362,19 @@ contract ArtGobblersTest is DSTestPlus {
         gobblers.mintLegendaryGobbler(ids);
     }
 
+    /// @notice test that Legendary Gobbler initial price is what we expect. 
+    function testLegendaryGobblerTargetPrice() public {
+        // Start of initial auction after initial interval is minted.
+        mintGobblerToAddress(users[0], gobblers.LEGENDARY_AUCTION_INTERVAL());
+        uint256 cost = gobblers.legendaryGobblerPrice();
+        // Initial auction should start at a cost of 69.
+        assertEq(cost, 69);
+    }
+
+    
+
+
+
     /// @notice Mint a number of gobblers to the given address
     function mintGobblerToAddress(address addr, uint256 num) internal {
         for (uint256 i = 0; i < num; ++i) {
