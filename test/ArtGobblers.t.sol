@@ -412,6 +412,39 @@ contract ArtGobblersTest is DSTestPlus {
         assertEq(startCost, 69);
     }
 
+    /// @notice Test that Legendary Gobblers can be minted. 
+    function testMintLegendaryGobbler() public {
+        uint256 startTime = block.timestamp + 30 days;
+        vm.warp(startTime);
+        //Mint full interval to kick off first auction 
+        mintGobblerToAddress(users[0], gobblers.LEGENDARY_AUCTION_INTERVAL());
+        uint256 cost = gobblers.legendaryGobblerPrice();
+        assertEq(cost, 69);
+        setRandomnessAndReveal(cost, "seed");
+        uint256 emissionMultipleSum;
+        for (uint curId = 1; curId <= cost; curId++) {
+            ids.push(curId);
+            assertEq(gobblers.ownerOf(curId), users[0]);
+            emissionMultipleSum += gobblers.getGobblerEmissionMultiple(curId);
+        }
+
+        assertEq(gobblers.getUserEmissionMultiple(users[0]), emissionMultipleSum);
+
+        vm.prank(users[0]);
+        uint256 mintedLegendaryid = gobblers.mintLegendaryGobbler(ids);
+
+        // Legendary is owned by user. 
+        assertEq(gobblers.ownerOf(mintedLegendaryid), users[0]);
+        assertEq(gobblers.getUserEmissionMultiple(users[0]), emissionMultipleSum * 2);
+        
+        assertEq(gobblers.getGobblerEmissionMultiple(mintedLegendaryid), emissionMultipleSum * 2);
+
+        for (uint256 i = 0; i < ids.length; ++i) {
+            hevm.expectRevert("NOT_MINTED");
+            gobblers.ownerOf(ids[i]);
+        }
+    }
+
 
 
     /// @notice Mint a number of gobblers to the given address
