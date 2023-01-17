@@ -486,6 +486,24 @@ contract ArtGobblersTest is DSTestPlus {
         assertEq(gobblers.getGobblerEmissionMultiple(mintedLegendaryId), 0);
     }
 
+    /// @notice test that Legendary Gobblers can be minted at 0 cost.
+    function testMintFreeLegendaryGobblerPastInterval() public {
+        uint256 startTime = block.timestamp + 30 days;
+        vm.warp(startTime);
+
+        // Mint 3 full intervals to send price to zero.
+        mintGobblerToAddress(users[0], gobblers.LEGENDARY_AUCTION_INTERVAL() * 3);
+
+        uint256 cost = gobblers.legendaryGobblerPrice();
+        assertEq(cost, 0);
+
+        vm.prank(users[0]);
+        uint256 mintedLegendaryId = gobblers.mintLegendaryGobbler(ids);
+
+        assertEq(gobblers.ownerOf(mintedLegendaryId), users[0]);
+        assertEq(gobblers.getGobblerEmissionMultiple(mintedLegendaryId), 0);
+    }
+
     /// @notice Mint a number of gobblers to the given address
     function mintGobblerToAddress(address addr, uint256 num) internal {
         for (uint256 i = 0; i < num; ++i) {
