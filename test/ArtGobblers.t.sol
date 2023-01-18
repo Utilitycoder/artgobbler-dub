@@ -194,22 +194,22 @@ contract ArtGobblersTest is DSTestPlus {
         gobblers.mintFromGoo(cost - 1, false);
     }
 
-    /// @notice Test that the initial gobbler price is what we expect. 
+    /// @notice Test that the initial gobbler price is what we expect.
     function testInitialGobblerPrice() public {
-        // warp to the largest sale time so that the gobbler price equals the target price. 
+        // warp to the largest sale time so that the gobbler price equals the target price.
         vm.warp(block.timestamp + fromDaysWadUnsafe(gobblers.getTargetSaleTime(1e18)));
 
         uint256 cost = gobblers.gobblerPrice();
         assertRelApproxEq(cost, uint256(gobblers.targetPrice()), 0.00001e18);
     }
 
-    /// @notice Test that minting resolved gobblers fails if there are no mints. 
+    /// @notice Test that minting resolved gobblers fails if there are no mints.
     function testMintReservedGobblersFailsWithNoMints() public {
         vm.expectRevert(ArtGobblers.ReserveImbalance.selector);
         gobblers.mintReservedGobblers(1);
     }
 
-    /// @notice Test that reserved gobblers can be minted under fair circumstances. 
+    /// @notice Test that reserved gobblers can be minted under fair circumstances.
     function testCanMintReserved() public {
         mintGobblerToAddress(users[0], 8);
         gobblers.mintReservedGobblers(1);
@@ -219,7 +219,7 @@ contract ArtGobblersTest is DSTestPlus {
         assertEq(gobblers.balanceOf(address(community)), 1);
     }
 
-    /// @notice Test multiple reserved gobblers can be minted under fair circumstances. 
+    /// @notice Test multiple reserved gobblers can be minted under fair circumstances.
     function testCanMintMultipleReserved() public {
         mintGobblerToAddress(users[0], 18);
 
@@ -232,7 +232,7 @@ contract ArtGobblersTest is DSTestPlus {
         assertEq(gobblers.balanceOf(address(community)), 2);
     }
 
-    /// @notice Test minting reserved gobblers fails if not enough have gobblers been minted. 
+    /// @notice Test minting reserved gobblers fails if not enough have gobblers been minted.
     function testCantMintTooFastReserved() public {
         mintGobblerToAddress(users[0], 18);
 
@@ -240,7 +240,7 @@ contract ArtGobblersTest is DSTestPlus {
         gobblers.mintReservedGobblers(3);
     }
 
-    /// @notice Test minting reserved gobblers fails one by one if not enough  have gobblers been minted. 
+    /// @notice Test minting reserved gobblers fails one by one if not enough  have gobblers been minted.
     function testCantMintTooFastReservedOneByOne() public {
         mintGobblerToAddress(users[0], 90);
 
@@ -260,7 +260,7 @@ contract ArtGobblersTest is DSTestPlus {
         gobblers.mintReservedGobblers(1);
     }
 
-    /// @notice Test that user can mint page with their virtual balance. 
+    /// @notice Test that user can mint page with their virtual balance.
     function testCanMintPageFromVirtualBalance() public {
         uint256 cost = gobblers.gobblerPrice();
         //mint initial gobbler
@@ -277,7 +277,7 @@ contract ArtGobblersTest is DSTestPlus {
         uint256 pagePrice = pages.pagePrice();
         console.log(pagePrice);
         assertTrue(initialBalance > pagePrice);
-        //Mint from balance 
+        //Mint from balance
         vm.prank(users[0]);
         pages.mintFromGoo(type(uint256).max, true);
         //assert owner is correct
@@ -290,7 +290,7 @@ contract ArtGobblersTest is DSTestPlus {
 
     function testCannotMintPageWithInsufficientBalance() public {
         uint256 cost = gobblers.gobblerPrice();
-        // mint initial balance. 
+        // mint initial balance.
         vm.prank(address(gobblers));
         goo.mintForGobblers(users[0], cost);
         vm.prank(users[0]);
@@ -327,34 +327,34 @@ contract ArtGobblersTest is DSTestPlus {
         uint256 targetPrice = uint256(gobblers.targetPrice());
         uint256 finalPrice = gobblers.gobblerPrice();
 
-        // Equal within 3 percent since num mint is rounded from true decimal amount. 
+        // Equal within 3 percent since num mint is rounded from true decimal amount.
         assertRelApproxEq(finalPrice, targetPrice, 0.03e18);
     }
 
     /// @notice Pricing function should NOT revert when trying to price the last mintable gobbler.
     function testDoesNotRevertEarly() public view {
-        //This is the last gobbler we expect to mint. 
+        //This is the last gobbler we expect to mint.
         int256 maxMintable = int256(gobblers.MAX_MINTABLE()) * 1e18;
-        //This call should NOT revert, since we should have a target date for the last mintable gobbler. 
+        //This call should NOT revert, since we should have a target date for the last mintable gobbler.
         gobblers.getTargetSaleTime(maxMintable);
     }
 
-    /// @notice Pricing function should revert when trying to price beyond the last mintable gobbler. 
+    /// @notice Pricing function should revert when trying to price beyond the last mintable gobbler.
     function testDoesRevertWhenExpected() public {
-        // one plus the max number of mintable gobblers. 
-        int256 maxMintablePlusOne = int256(gobblers.MAX_MINTABLE() +1) * 1e18;
-        //This call should revert, since there should be no target date beyond max mintable gobbblers. 
+        // one plus the max number of mintable gobblers.
+        int256 maxMintablePlusOne = int256(gobblers.MAX_MINTABLE() + 1) * 1e18;
+        //This call should revert, since there should be no target date beyond max mintable gobbblers.
         vm.expectRevert("UNDEFINED");
         gobblers.getTargetSaleTime(maxMintablePlusOne);
     }
 
     ////////////// LEGENDARY GOBBLERS ////////////
-    
-    /// @notice Test that attempting to mint before start time reverts. 
+
+    /// @notice Test that attempting to mint before start time reverts.
     function testLegendaryGobblerMintBeforeStart() public {
         vm.expectRevert(
             abi.encodeWithSelector(
-                ArtGobblers.LegendaryAuctionNotStarted.selector, 
+                ArtGobblers.LegendaryAuctionNotStarted.selector,
                 gobblers.LEGENDARY_AUCTION_INTERVAL()
             )
         );
@@ -362,7 +362,7 @@ contract ArtGobblersTest is DSTestPlus {
         gobblers.mintLegendaryGobbler(ids);
     }
 
-    /// @notice test that Legendary Gobbler initial price is what we expect. 
+    /// @notice test that Legendary Gobbler initial price is what we expect.
     function testLegendaryGobblerTargetPrice() public {
         // Start of initial auction after initial interval is minted.
         mintGobblerToAddress(users[0], gobblers.LEGENDARY_AUCTION_INTERVAL());
@@ -371,58 +371,58 @@ contract ArtGobblersTest is DSTestPlus {
         assertEq(cost, 69);
     }
 
-    /// @notice Test that auction ends at a price of 0. 
+    /// @notice Test that auction ends at a price of 0.
     function testLegendaryGobblerFinalPrice() public {
         // Mint 2 full intervals.
         mintGobblerToAddress(users[0], gobblers.LEGENDARY_AUCTION_INTERVAL() * 2);
         uint256 cost = gobblers.legendaryGobblerPrice();
-        // Auction price should be 0 after full interval decay. 
+        // Auction price should be 0 after full interval decay.
         assertEq(cost, 0);
     }
 
-    /// @notice Test that auction ends at a price of 0 even after the interval. 
+    /// @notice Test that auction ends at a price of 0 even after the interval.
     function testLegendaryGobblerPastFinalPrice() public {
-        // Mint 3 full intervals. 
-        vm .warp(block.timestamp + 600 days);
+        // Mint 3 full intervals.
+        vm.warp(block.timestamp + 600 days);
         mintGobblerToAddress(users[0], gobblers.LEGENDARY_AUCTION_INTERVAL() * 3);
         uint256 cost = gobblers.legendaryGobblerPrice();
         // Auction price should be 0 after full interval decay.
         assertEq(cost, 0);
     }
 
-    /// @notice Test that mid price happens when we expect. 
+    /// @notice Test that mid price happens when we expect.
     function testLegendaryGobblerMidPrice() public {
-        // Mint first interval and half of second interval. 
+        // Mint first interval and half of second interval.
         mintGobblerToAddress(users[0], FixedPointMathLib.unsafeDivUp(gobblers.LEGENDARY_AUCTION_INTERVAL() * 3, 2));
         uint256 cost = gobblers.legendaryGobblerPrice();
-        // Auction price should be cut by half mid way through auction. 
+        // Auction price should be cut by half mid way through auction.
         assertEq(cost, 35);
     }
 
-    /// @notice Test that target price doesn't fall below what we exoect. 
+    /// @notice Test that target price doesn't fall below what we exoect.
     function testLegendaryGobblerMinStartPrice() public {
-        // Mint two full intervals, such that price of first auction goes to zero. 
+        // Mint two full intervals, such that price of first auction goes to zero.
         mintGobblerToAddress(users[0], gobblers.LEGENDARY_AUCTION_INTERVAL() * 2);
-        //Empty id list. 
+        //Empty id list.
         uint256[] memory _ids;
-        //Mint first auction at zero cost. 
+        //Mint first auction at zero cost.
         gobblers.mintLegendaryGobbler(_ids);
-        // Start cost of next auction, which should equal 69. 
+        // Start cost of next auction, which should equal 69.
         uint256 startCost = gobblers.legendaryGobblerPrice();
         assertEq(startCost, 69);
     }
 
-    /// @notice Test that Legendary Gobblers can be minted. 
+    /// @notice Test that Legendary Gobblers can be minted.
     function testMintLegendaryGobbler() public {
         uint256 startTime = block.timestamp + 30 days;
         vm.warp(startTime);
-        //Mint full interval to kick off first auction 
+        //Mint full interval to kick off first auction
         mintGobblerToAddress(users[0], gobblers.LEGENDARY_AUCTION_INTERVAL());
         uint256 cost = gobblers.legendaryGobblerPrice();
         assertEq(cost, 69);
         setRandomnessAndReveal(cost, "seed");
         uint256 emissionMultipleSum;
-        for (uint curId = 1; curId <= cost; curId++) {
+        for (uint256 curId = 1; curId <= cost; curId++) {
             ids.push(curId);
             assertEq(gobblers.ownerOf(curId), users[0]);
             emissionMultipleSum += gobblers.getGobblerEmissionMultiple(curId);
@@ -433,10 +433,10 @@ contract ArtGobblersTest is DSTestPlus {
         vm.prank(users[0]);
         uint256 mintedLegendaryid = gobblers.mintLegendaryGobbler(ids);
 
-        // Legendary is owned by user. 
+        // Legendary is owned by user.
         assertEq(gobblers.ownerOf(mintedLegendaryid), users[0]);
         assertEq(gobblers.getUserEmissionMultiple(users[0]), emissionMultipleSum * 2);
-        
+
         assertEq(gobblers.getGobblerEmissionMultiple(mintedLegendaryid), emissionMultipleSum * 2);
 
         for (uint256 i = 0; i < ids.length; ++i) {
@@ -445,11 +445,11 @@ contract ArtGobblersTest is DSTestPlus {
         }
     }
 
-    /// @notice Test that owned counts are computed properly when minting a legendary 
+    /// @notice Test that owned counts are computed properly when minting a legendary
     function testLegendaryMintBalance() public {
         uint256 startTime = block.timestamp + 30 days;
         vm.warp(startTime);
-        //Mint full interval to kick off first auction. 
+        //Mint full interval to kick off first auction.
         mintGobblerToAddress(users[0], gobblers.LEGENDARY_AUCTION_INTERVAL());
         uint256 cost = gobblers.legendaryGobblerPrice();
         assertEq(cost, 69);
@@ -468,7 +468,7 @@ contract ArtGobblersTest is DSTestPlus {
         assertEq(finalBalance, initialBalance - cost + 1);
     }
 
-    /// @notice Test that legendary Gobblers can be minted at 0 cost. 
+    /// @notice Test that legendary Gobblers can be minted at 0 cost.
     function testMintFreeLegendaryGobbler() public {
         uint256 startTime = block.timestamp + 30 days;
         vm.warp(startTime);
@@ -508,13 +508,13 @@ contract ArtGobblersTest is DSTestPlus {
     function testMintLegendaryGobblerWithInsufficientCost() public {
         uint256 startTime = block.timestamp + 30 days;
         vm.warp(startTime);
-        // Mint full interval to kick off first auction 
+        // Mint full interval to kick off first auction
         mintGobblerToAddress(users[0], gobblers.LEGENDARY_AUCTION_INTERVAL());
         uint256 cost = gobblers.legendaryGobblerPrice();
         assertEq(cost, 69);
         setRandomnessAndReveal(cost, "seed");
         uint256 emissionMultipleSum;
-        for (uint curId = 1; curId <= cost; curId++) {
+        for (uint256 curId = 1; curId <= cost; curId++) {
             ids.push(curId);
             assertEq(gobblers.ownerOf(curId), users[0]);
             emissionMultipleSum += gobblers.getGobblerEmissionMultiple(curId);
@@ -522,12 +522,64 @@ contract ArtGobblersTest is DSTestPlus {
 
         assertEq(gobblers.getUserEmissionMultiple(users[0]), emissionMultipleSum);
 
-        // Remove one id such that payment is insufficient. 
+        // Remove one id such that payment is insufficient.
         ids.pop();
 
         vm.prank(users[0]);
         vm.expectRevert(abi.encodeWithSelector(ArtGobblers.InsufficientGobblerAmount.selector, cost));
         gobblers.mintLegendaryGobbler(ids);
+    }
+
+    /// @notice Test that legendary gobblers can be minted with slippage.
+    // function testMintLegendaryGobblerWithSlippage() public {
+
+    //     //add more ids than necessary
+    //     uint256 curId;
+
+    //     console.log(curId);
+
+    //     // Check full cost was burned
+
+    //     for (uint256 curId = 1; curId <= cost; curId++) {
+    //         hevm.expectRevert("NOT_MINTED");
+    //         gobblers.ownerOf(curId);
+    //     }
+
+    //     // check extra tokens were not burned
+    //     for (uint256 curId = 1; curId <= cost + 10; curId++) {
+    //         assertEq(gobblers.ownerOf(curId), users[0]);
+    //     }
+    // }
+
+    function testMintLegendaryGobblerWithSlippage() public {
+        uint256 startTime = block.timestamp + 30 days;
+        vm.warp(startTime);
+        // Mint full interval to kick off first auction.
+        mintGobblerToAddress(users[0], gobblers.LEGENDARY_AUCTION_INTERVAL());
+
+        uint256 cost = gobblers.legendaryGobblerPrice();
+        assertEq(cost, 69);
+        setRandomnessAndReveal(cost, "seed");
+        uint256 emissionMultipleSum;
+        //add more ids than necessary
+        for (uint256 curId = 1; curId <= cost + 10; curId++) {
+            ids.push(curId);
+            assertEq(gobblers.ownerOf(curId), users[0]);
+            emissionMultipleSum += gobblers.getGobblerEmissionMultiple(curId);
+        }
+
+        vm.prank(users[0]);
+        gobblers.mintLegendaryGobbler(ids);
+
+        //check full cost was burned
+        for (uint256 curId = 1; curId <= cost; curId++) {
+            hevm.expectRevert("NOT_MINTED");
+            gobblers.ownerOf(curId);
+        }
+        //check extra tokens were not burned
+        for (uint256 curId = cost + 1; curId <= cost + 10; curId++) {
+            assertEq(gobblers.ownerOf(curId), users[0]);
+        }
     }
 
     /// @notice Mint a number of gobblers to the given address
