@@ -504,6 +504,32 @@ contract ArtGobblersTest is DSTestPlus {
         assertEq(gobblers.getGobblerEmissionMultiple(mintedLegendaryId), 0);
     }
 
+    /// @notice Test that Legendary gobblers can't be minted with insufficient payment.
+    function testMintLegendaryGobblerWithInsufficientCost() public {
+        uint256 startTime = block.timestamp + 30 days;
+        vm.warp(startTime);
+        // Mint full interval to kick off first auction 
+        mintGobblerToAddress(users[0], gobblers.LEGENDARY_AUCTION_INTERVAL());
+        uint256 cost = gobblers.legendaryGobblerPrice();
+        assertEq(cost, 69);
+        setRandomnessAndReveal(cost, "seed");
+        uint256 emissionMultipleSum;
+        for (uint curId = 1; curId <= cost; curId++) {
+            ids.push(curId);
+            assertEq(gobblers.ownerOf(curId), users[0]);
+            emissionMultipleSum += gobblers.getGobblerEmissionMultiple(curId);
+        }
+
+        assertEq(gobblers.getUserEmissionMultiple(users[0]), emissionMultipleSum);
+
+        // Remove one id such that payment is insufficient. 
+        ids.pop();
+
+        vm.prank(users[0]);
+        vm.expectRevert(abi.encodeWithSelector(ArtGobblers.InsufficientGobblerAmount.selector, cost));
+        gobblers.mintLegendaryGobbler(ids);
+    }
+
     /// @notice Mint a number of gobblers to the given address
     function mintGobblerToAddress(address addr, uint256 num) internal {
         for (uint256 i = 0; i < num; ++i) {
