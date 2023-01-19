@@ -531,26 +531,6 @@ contract ArtGobblersTest is DSTestPlus {
     }
 
     /// @notice Test that legendary gobblers can be minted with slippage.
-    // function testMintLegendaryGobblerWithSlippage() public {
-
-    //     //add more ids than necessary
-    //     uint256 curId;
-
-    //     console.log(curId);
-
-    //     // Check full cost was burned
-
-    //     for (uint256 curId = 1; curId <= cost; curId++) {
-    //         hevm.expectRevert("NOT_MINTED");
-    //         gobblers.ownerOf(curId);
-    //     }
-
-    //     // check extra tokens were not burned
-    //     for (uint256 curId = 1; curId <= cost + 10; curId++) {
-    //         assertEq(gobblers.ownerOf(curId), users[0]);
-    //     }
-    // }
-
     function testMintLegendaryGobblerWithSlippage() public {
         uint256 startTime = block.timestamp + 30 days;
         vm.warp(startTime);
@@ -580,6 +560,33 @@ contract ArtGobblersTest is DSTestPlus {
         for (uint256 curId = cost + 1; curId <= cost + 10; curId++) {
             assertEq(gobblers.ownerOf(curId), users[0]);
         }
+    }
+
+    /// @notice Test that legendary can't be minted if the user doesn't own one of the ids.
+    function testMintLegendaryGobblerWithUnknownedId() public {
+        uint256 startTime = block.timestamp + 30 days;
+        vm.warp(startTime);
+        // Mint full interval to kick off first auction. 
+        mintGobblerToAddress(users[0], gobblers.LEGENDARY_AUCTION_INTERVAL());
+        uint256 cost = gobblers.legendaryGobblerPrice();
+        assertEq(cost, 69);
+        setRandomnessAndReveal(cost, "seed");
+        uint256 emissionMultipleSum;
+        for (uint256 curId = 1; curId <= cost; curId++) {
+            ids.push(curId);
+            assertEq(gobblers.ownerOf(curId), users[0]);
+            emissionMultipleSum += gobblers.getGobblerEmissionMultiple(curId);
+        }
+
+        assertEq(gobblers.getUserEmissionMultiple(users[0]), emissionMultipleSum);
+        // remove one of the ids to create a gap
+        ids.pop();
+        // Id 69 is missing here.
+        ids.push(999);
+
+        vm.prank(users[0]);
+        vm.expectRevert("WRONG_FROM");
+        gobblers.mintLegendaryGobbler(ids);
     }
 
     /// @notice Mint a number of gobblers to the given address
