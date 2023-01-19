@@ -589,6 +589,31 @@ contract ArtGobblersTest is DSTestPlus {
         gobblers.mintLegendaryGobbler(ids);
     }
 
+    /// @notice Test that legendary gobblers have expected ids. 
+    function testMintLegendaryGobblersExpectedIds() public {
+        // We expect the first legendary to have this ids.
+        uint256 nextMintLegendaryId = 9991;
+        mintGobblerToAddress(users[0], gobblers.LEGENDARY_AUCTION_INTERVAL());
+        for (int i = 0; i < 10; ++i) {
+            vm.warp(block.timestamp + 400 days);
+
+            mintGobblerToAddress(users[0], gobblers.LEGENDARY_AUCTION_INTERVAL());
+            uint256 justMintedLegendaryId = gobblers.mintLegendaryGobbler(ids);
+            //Assert that legendaries have the expected ids
+            assertEq(nextMintLegendaryId, justMintedLegendaryId);
+            ++nextMintLegendaryId;
+        }
+
+        console.log(nextMintLegendaryId);
+
+        // Minting any more should fail. 
+        vm.expectRevert(ArtGobblers.NoRemainingLegendaryGobblers.selector);
+        gobblers.mintLegendaryGobbler(ids);
+
+        vm.expectRevert(ArtGobblers.NoRemainingLegendaryGobblers.selector);
+        gobblers.legendaryGobblerPrice();
+    }
+
     /// @notice Mint a number of gobblers to the given address
     function mintGobblerToAddress(address addr, uint256 num) internal {
         for (uint256 i = 0; i < num; ++i) {
