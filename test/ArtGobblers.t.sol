@@ -614,6 +614,29 @@ contract ArtGobblersTest is DSTestPlus {
         gobblers.legendaryGobblerPrice();
     }
 
+    /// @notice Test that legendary Gobblers can't be burned to mint another legendary. 
+    function testCannotMintLegendaryWithLegendary() public {
+        uint256 startTime = block.timestamp + 30 days;
+        vm.warp(startTime);
+
+        mintNextLegendary(users[0]);
+        uint256 mintedLegendaryId = gobblers.FIRST_LEGENDARY_GOBBLER_ID();
+        // First legendary to be minted should be 9991. 
+        assertEq(mintedLegendaryId, 9991);
+        uint256 cost = gobblers.legendaryGobblerPrice();
+
+        // Starting price should be 69.
+        assertEq(cost, 69);
+        setRandomnessAndReveal(cost, "seed");
+        //This shows I do not need a square bracket if my code can fit a line.
+        for (uint i = 1; i <= cost; ++i) ids.push(i);
+
+        ids[0] = mintedLegendaryId; // Try to pass in the legendary we just minted as well. 
+        vm.prank(users[0]);
+        vm.expectRevert(abi.encodeWithSelector(ArtGobblers.CannotBurnLegendary.selector, mintedLegendaryId));
+        gobblers.mintLegendaryGobbler(ids);
+    }
+
     /// @notice Mint a number of gobblers to the given address
     function mintGobblerToAddress(address addr, uint256 num) internal {
         for (uint256 i = 0; i < num; ++i) {
@@ -637,5 +660,12 @@ contract ArtGobblersTest is DSTestPlus {
         // call back from coordinator
         vrfCoordinator.callBackWithRandomness(requestId, randomness, address(randProvider));
         gobblers.revealGobblers(numReveal);
+    }
+
+    function mintNextLegendary(address addr) internal {
+        uint256[] memory id;
+        mintGobblerToAddress(addr, gobblers.LEGENDARY_AUCTION_INTERVAL() * 2);
+        vm.prank(addr);
+        gobblers.mintLegendaryGobbler(id);
     }
 }
