@@ -750,6 +750,13 @@ contract ArtGobblersTest is DSTestPlus {
         gobblers.requestRandomSeed();
     }
 
+    /// @notice Cannot request random seed before 24 hours have passed from initial mint. 
+    function testRevealDelayInitialMint() public {
+        mintGobblerToAddress(users[1], 1);
+        vm.expectRevert(ArtGobblers.RequestTooEarly.selector);
+        gobblers.requestRandomSeed();
+    }
+
     /// @notice Mint a number of gobblers to the given address
     function mintGobblerToAddress(address addr, uint256 num) internal {
         for (uint256 i = 0; i < num; ++i) {
