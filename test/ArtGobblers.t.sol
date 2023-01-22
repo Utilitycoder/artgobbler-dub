@@ -692,6 +692,17 @@ contract ArtGobblersTest is DSTestPlus {
         gobblers.tokenURI(1);
     }
 
+    /// @notice Test thate unrevealed URI is correct.
+    function testUnrevealedUri() public {
+        uint256 gobblerCost = gobblers.gobblerPrice();
+        vm.prank(address(gobblers));
+        goo.mintForGobblers(users[0], gobblerCost);
+        vm.prank(users[0]);
+        gobblers.mintFromGoo(type(uint256).max, false);
+        // assert gobbler got revealed after mint. 
+        assertTrue(stringEquals(gobblers.tokenURI(1), gobblers.UNREVEALED_URI()));
+    }
+
     /// @notice Mint a number of gobblers to the given address
     function mintGobblerToAddress(address addr, uint256 num) internal {
         for (uint256 i = 0; i < num; ++i) {
@@ -715,6 +726,11 @@ contract ArtGobblersTest is DSTestPlus {
         // call back from coordinator
         vrfCoordinator.callBackWithRandomness(requestId, randomness, address(randProvider));
         gobblers.revealGobblers(numReveal);
+    }
+
+    /// @notice Check for string equality
+    function stringEquals(string memory s1, string memory s2) internal pure returns (bool) {
+        return keccak256(abi.encodePacked(s1)) == keccak256(abi.encodePacked(s2));
     }
 
     function mintNextLegendary(address addr) internal {
