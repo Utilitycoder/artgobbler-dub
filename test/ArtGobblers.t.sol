@@ -684,6 +684,14 @@ contract ArtGobblersTest is DSTestPlus {
         vm.stopPrank();
     }
 
+    ////////////////// URIS //////////////////////
+
+    /// @notice Test unminted URI is correct. 
+    function testUnmintedUri() public {
+        hevm.expectRevert("NOT_MINTED");
+        gobblers.tokenURI(1);
+    }
+
     /// @notice Mint a number of gobblers to the given address
     function mintGobblerToAddress(address addr, uint256 num) internal {
         for (uint256 i = 0; i < num; ++i) {
