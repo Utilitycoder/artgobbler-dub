@@ -742,6 +742,14 @@ contract ArtGobblersTest is DSTestPlus {
         gobblers.tokenURI(currentLegendaryId + 1);
     }
 
+    //////////////// REVEALS //////////////////////////////////
+
+    function testDoesNotAllowRevealingZero() public {
+        vm.warp(block.timestamp + 24 hours);
+        vm.expectRevert(ArtGobblers.ZeroToBeRevealed.selector);
+        gobblers.requestRandomSeed();
+    }
+
     /// @notice Mint a number of gobblers to the given address
     function mintGobblerToAddress(address addr, uint256 num) internal {
         for (uint256 i = 0; i < num; ++i) {
