@@ -774,7 +774,7 @@ contract ArtGobblersTest is DSTestPlus {
         gobblers.revealGobblers(2);
     }
 
-    /// @notice Cannot request random seed before 24 hours have passed from last reveal. 
+    /// @notice Cannot request random seed before 24 hours have passed from last reveal.
     function testRevealDelayRecurring() public {
         //Mint and reveal first gobbler
         mintGobblerToAddress(users[0], 1);
@@ -784,6 +784,17 @@ contract ArtGobblersTest is DSTestPlus {
         mintGobblerToAddress(users[0], 1);
         vm.expectRevert(ArtGobblers.RequestTooEarly.selector);
         gobblers.requestRandomSeed();
+    }
+
+    /// @notice Test that seed can't be set without first revealing pending gobblers.
+    function testCantSetRandomSeedWithoutRevealing() public {
+        mintGobblerToAddress(users[0], 2);
+        vm.warp(block.timestamp + 1 days);
+        setRandomnessAndReveal(1, "seed");
+        vm.warp(block.timestamp + 1 days);
+        // should fail since there is one remaining gobbler to be revealed with seed
+        vm.expectRevert(ArtGobblers.RevealsPending.selector);
+        setRandomnessAndReveal(1, "seed");
     }
 
     /// @notice Mint a number of gobblers to the given address
