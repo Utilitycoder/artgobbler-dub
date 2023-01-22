@@ -725,8 +725,21 @@ contract ArtGobblersTest is DSTestPlus {
         string memory expectedURI = string(
             abi.encodePacked(gobblers.BASE_URI(), uint256(currentLegendaryId).toString())
         );
+
         string memory actualURI = gobblers.tokenURI(currentLegendaryId);
         assertTrue(stringEquals(actualURI, expectedURI));
+    }
+
+    /// @notice Test that un-minted legendary gobbler URI is correct. 
+    function testUnmintedLegendaryURI() public {
+        uint256 currentLegendaryId = gobblers.FIRST_LEGENDARY_GOBBLER_ID();
+        console.log(currentLegendaryId);
+
+        hevm.expectRevert("NOT_MINTED");
+        gobblers.tokenURI(currentLegendaryId);
+
+        hevm.expectRevert("NOT_MINTED");
+        gobblers.tokenURI(currentLegendaryId + 1);
     }
 
     /// @notice Mint a number of gobblers to the given address
