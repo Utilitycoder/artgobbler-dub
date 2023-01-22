@@ -715,6 +715,20 @@ contract ArtGobblersTest is DSTestPlus {
         assertTrue(stringEquals(gobblers.tokenURI(1), expectedURI));
     }
 
+    /// @notice Test that legendary gobbler URI is correct. 
+    function testMintedLEgendaryURI() public {
+        // Mint legendary for free 
+        mintGobblerToAddress(users[0], gobblers.LEGENDARY_AUCTION_INTERVAL() * 2);
+        uint256 currentLegendaryId = gobblers.mintLegendaryGobbler(ids);
+
+        // expected URI should be shuffled
+        string memory expectedURI = string(
+            abi.encodePacked(gobblers.BASE_URI(), uint256(currentLegendaryId).toString())
+        );
+        string memory actualURI = gobblers.tokenURI(currentLegendaryId);
+        assertTrue(stringEquals(actualURI, expectedURI));
+    }
+
     /// @notice Mint a number of gobblers to the given address
     function mintGobblerToAddress(address addr, uint256 num) internal {
         for (uint256 i = 0; i < num; ++i) {
