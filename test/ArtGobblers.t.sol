@@ -703,6 +703,18 @@ contract ArtGobblersTest is DSTestPlus {
         assertTrue(stringEquals(gobblers.tokenURI(1), gobblers.UNREVEALED_URI()));
     }
 
+    /// @notice Test that revealed URI is correct
+    function testRevealedUri() public {
+        mintGobblerToAddress(users[0], 1);
+        // unrevealed gobblers have 0 value attributes
+        assertEq(gobblers.getGobblerEmissionMultiple(1), 0);
+        vm.warp(block.timestamp + 1 days);
+        setRandomnessAndReveal(1, "seed");
+        (, uint64 expectedIndex, ) = gobblers.getGobblerData(1);
+        string memory expectedURI = string(abi.encodePacked(gobblers.BASE_URI(), uint256(expectedIndex).toString()));
+        assertTrue(stringEquals(gobblers.tokenURI(1), expectedURI));
+    }
+
     /// @notice Mint a number of gobblers to the given address
     function mintGobblerToAddress(address addr, uint256 num) internal {
         for (uint256 i = 0; i < num; ++i) {
