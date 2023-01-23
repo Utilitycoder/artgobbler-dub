@@ -806,9 +806,9 @@ contract ArtGobblersTest is DSTestPlus {
         }
         // can only reveal every 24 hours
         vm.warp(block.timestamp + 1 days);
-        
+
         setRandomnessAndReveal(50, "seed");
-        //first 50 gobblers should now be revealed. 
+        //first 50 gobblers should now be revealed.
         for (uint256 i = 1; i <= 50; ++i) {
             assertTrue(!stringEquals(gobblers.tokenURI(i), gobblers.UNREVEALED_URI()));
             if (i >= 40) {
@@ -823,25 +823,45 @@ contract ArtGobblersTest is DSTestPlus {
     }
 
     function testCannotReuseSeedForReveal() public {
-        // first mint and reveal. 
+        // first mint and reveal.
         mintGobblerToAddress(users[0], 1);
         vm.warp(block.timestamp + 1 days);
         setRandomnessAndReveal(1, "seed");
-        // seed used for first reveal. 
-        (uint64 firstSeed, , , ,) = gobblers.gobblerRevealsData();
+        // seed used for first reveal.
+        (uint64 firstSeed, , , , ) = gobblers.gobblerRevealsData();
         //second mint.
         mintGobblerToAddress(users[0], 1);
         vm.warp(block.timestamp + 1 days);
         gobblers.requestRandomSeed();
         // seed we want to use for second reveal
-        (uint64 secondSeed, , , ,) = gobblers.gobblerRevealsData();
+        (uint64 secondSeed, , , , ) = gobblers.gobblerRevealsData();
         //verify that we are trying to use the same seed.
         assertEq(firstSeed, secondSeed);
         //try to reveal with same seed, which should fail.
         vm.expectRevert(ArtGobblers.SeedPending.selector);
         gobblers.revealGobblers(1);
         assertTrue(true);
+    }
 
+    ///////////////////// GOO //////////////////////////////////////
+
+    /// @notice test that goo balance grows as expected.
+    function testSimpleRewards() public {
+        mintGobblerToAddress(users[0], 1);
+        // balance should initially be zero
+        assertEq(gobblers.gooBalance(users[0]), 0);
+        // Move timestamp to 11 hours, 46 minutes and 
+        vm.warp(block.timestamp + 100000);
+        //balance should be zero while no reveal
+        assertEq(gobblers.gooBalance(users[0]), 0);
+        setRandomnessAndReveal(1, "seed");
+        //balance should NOT grow on same timestamp after reveal.
+        assertEq(gobblers.gooBalance(users[0]), 0);
+        vm.warp(block.timestamp + 100000);
+        // balance should grow  after reveal
+        uint8 balance = uint8(gobblers.gooBalance(users[0]));
+        assertGt(balance, 0);
+        console.log(balance); 
     }
 
     /// @notice Mint a number of gobblers to the given address
