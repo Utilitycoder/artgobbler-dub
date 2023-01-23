@@ -797,6 +797,31 @@ contract ArtGobblersTest is DSTestPlus {
         setRandomnessAndReveal(1, "seed");
     }
 
+    /// @notice Test that revevals work as expected
+    function testMultiReveal() public {
+        mintGobblerToAddress(users[0], 100);
+        //first 100 gobblers should be unrevealed
+        for (uint256 i = 1; i <= 100; ++i) {
+            assertEq(gobblers.tokenURI(i), gobblers.UNREVEALED_URI());
+        }
+        // can only reveal every 24 hours
+        vm.warp(block.timestamp + 1 days);
+        
+        setRandomnessAndReveal(50, "seed");
+        //first 50 gobblers should now be revealed. 
+        for (uint256 i = 1; i <= 50; ++i) {
+            assertTrue(!stringEquals(gobblers.tokenURI(i), gobblers.UNREVEALED_URI()));
+            if (i >= 40) {
+                console.log(gobblers.tokenURI(i));
+            }
+        }
+
+        // and next 50 should remain unrevealed
+        for (uint256 i = 51; i <= 100; ++i) {
+            assertTrue(stringEquals(gobblers.tokenURI(i), gobblers.UNREVEALED_URI()));
+        }
+    }
+
     /// @notice Mint a number of gobblers to the given address
     function mintGobblerToAddress(address addr, uint256 num) internal {
         for (uint256 i = 0; i < num; ++i) {
