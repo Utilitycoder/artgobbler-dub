@@ -850,7 +850,7 @@ contract ArtGobblersTest is DSTestPlus {
         mintGobblerToAddress(users[0], 1);
         // balance should initially be zero
         assertEq(gobblers.gooBalance(users[0]), 0);
-        // Move timestamp to 11 hours, 46 minutes and 
+        // Move timestamp to 11 hours, 46 minutes and
         vm.warp(block.timestamp + 100000);
         //balance should be zero while no reveal
         assertEq(gobblers.gooBalance(users[0]), 0);
@@ -861,7 +861,36 @@ contract ArtGobblersTest is DSTestPlus {
         // balance should grow  after reveal
         uint8 balance = uint8(gobblers.gooBalance(users[0]));
         assertGt(balance, 0);
-        console.log(balance); 
+        console.log(balance);
+    }
+
+    /// @notice Test that goo removal works as expected.
+    function testGooRemove() public {
+        mintGobblerToAddress(users[0], 1);
+        vm.warp(block.timestamp + 1 days);
+        setRandomnessAndReveal(1, "seed");
+        vm.warp(block.timestamp + 100000);
+        uint256 initialBalance = gobblers.gooBalance(users[0]);
+        uint256 removalAmount = initialBalance / 10;
+        vm.prank(users[0]);
+        gobblers.removeGoo(removalAmount);
+        uint256 finalBalance = gobblers.gooBalance(users[0]);
+        // Balance should change
+        assertTrue(initialBalance != finalBalance);
+        assertEq(initialBalance, finalBalance + removalAmount);
+        // User should have removed goo
+        assertEq(goo.balanceOf(users[0]), removalAmount);
+    }
+
+    /// @notice Test that goo can't be removed when the balance is insufficient.
+    function testCantRemoveGoo() public {
+        vm.warp(block.timestamp + 100000);
+        mintGobblerToAddress(users[0], 1);
+        setRandomnessAndReveal(1, "seed");
+        vm.prank(users[0]);
+        vm.expectRevert(stdError.arithmeticError);
+        // Can't remove, since balance should be zero
+        gobblers.removeGoo(1);
     }
 
     /// @notice Mint a number of gobblers to the given address
