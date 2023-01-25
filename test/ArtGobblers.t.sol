@@ -1007,6 +1007,55 @@ contract ArtGobblersTest is DSTestPlus {
         assertEq(gobblers.gooBalance(users[1]), userTwoBalance);
     }
 
+    //////////////////////////// FEEDING ART //////////////////////////
+
+    /// @notice Test that pages can be fed to gobblers.
+    function testFeedingArt() public {
+        address user = users[0];
+        mintGobblerToAddress(user, 1);
+        uint256 pagePrice = pages.pagePrice();
+        vm.prank(address(gobblers));
+        goo.mintForGobblers(user, pagePrice);
+        vm.startPrank(user);
+        pages.mintFromGoo(type(uint256).max, false);
+        gobblers.gobble(1, address(pages), 1, false);
+        vm.stopPrank();
+        assertEq(gobblers.getCopiesOfArtGobbledByGobbler(1, address(pages), 1), 1);
+    }
+
+    /// @notice Test that you can't feed art to gobblers you don't own.
+    function testCantgobbleToUnknownedGobbler() public {
+        address user = users[0];
+        uint256 pagePrice = pages.pagePrice();
+        vm.prank(address(gobblers));
+        goo.mintForGobblers(user, pagePrice);
+        vm.startPrank(user);
+        pages.mintFromGoo(type(uint256).max, false);
+        vm.expectRevert(abi.encodeWithSelector(ArtGobblers.OwnerMismatch.selector, address(0)));
+        gobblers.gobble(1, address(pages), 1, false);
+        vm.stopPrank();
+    }
+
+    /// @notice Test that you can't feed art you don't own to your gobbler.
+    function testCantFeedUnownedArt() public {
+        address user = users[0];
+        mintGobblerToAddress(user, 1);
+        vm.startPrank(user);
+        vm.expectRevert("WRONG_FROM");
+        gobblers.gobble(1, address(pages), 1, false);
+        vm.stopPrank();
+    }
+
+    /// @notice Test that gobblers can't eat other gobblers
+    function testCantFeedGobblers() public {
+        address user = users[0];
+        mintGobblerToAddress(user, 2);
+        vm.startPrank(user);
+        vm.expectRevert(ArtGobblers.Cannibalism.selector);
+        gobblers.gobble(1, address(gobblers), 1, true);
+        vm.stopPrank();
+    }
+
     /// @notice Mint a number of gobblers to the given address
     function mintGobblerToAddress(address addr, uint256 num) internal {
         for (uint256 i = 0; i < num; ++i) {
