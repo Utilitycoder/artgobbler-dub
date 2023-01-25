@@ -1068,7 +1068,42 @@ contract ArtGobblersTest is DSTestPlus {
         gobblers.gobble(1, address(pages), 1, true);
     }
 
-    
+    function testFeeding1155() public {
+        address user =  users[0];
+        mintGobblerToAddress(user, 1);
+        MockERC1155 token = new MockERC1155();
+        token.mint(user, 0, 1, "");
+        vm.startPrank(user);
+        token.setApprovalForAll(address(gobblers), true);
+        gobblers.gobble(1, address(token), 0, true);
+        vm.stopPrank();
+        assertEq(gobblers.getCopiesOfArtGobbledByGobbler(1, address(token), 0), 1);
+    }
+
+    function testFeedingMultiple1155Copies() public {
+        address user = users[0];
+        mintGobblerToAddress(user, 1);
+        MockERC1155 token = new MockERC1155();
+        token.mint(user, 0, 5, "");
+        vm.startPrank(user);
+        token.setApprovalForAll(address(gobblers), true);
+        for (uint256 i = 0; i <= 4; i++) {
+            gobblers.gobble(1, address(token), 0, true);
+        }
+        vm.stopPrank();
+        assertEq(gobblers.getCopiesOfArtGobbledByGobbler(1, address(token), 0), 5);
+    }
+
+    function testCantFeed1155As721() public {
+        address user = users[0];
+        mintGobblerToAddress(user, 1);
+        MockERC1155 token = new MockERC1155();
+        token.mint(user, 0, 1, "");
+        vm.startPrank(user);
+        token.setApprovalForAll(address(gobblers), true);
+        vm.expectRevert();
+        gobblers.gobble(1, address(token), 0, false);
+    }
 
     /// @notice Mint a number of gobblers to the given address
     function mintGobblerToAddress(address addr, uint256 num) internal {
