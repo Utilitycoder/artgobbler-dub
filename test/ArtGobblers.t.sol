@@ -893,6 +893,26 @@ contract ArtGobblersTest is DSTestPlus {
         gobblers.removeGoo(1);
     }
 
+    /// @notice Test that adding goo is reflected in balance.
+    function testGooAddition() public {
+        mintGobblerToAddress(users[0], 1);
+        assertEq(gobblers.getGobblerEmissionMultiple(1), 0);
+        assertEq(gobblers.getUserEmissionMultiple(users[0]), 0);
+        // waiting after mint to reveal shouldn't affect balance 
+        vm.warp(block.timestamp + 100000);
+        assertEq(gobblers.gooBalance(users[0]), 0);
+        setRandomnessAndReveal(1, "seed");
+        uint256 gobblerMultiple = gobblers.getGobblerEmissionMultiple(1);
+        assertGt(gobblerMultiple, 0);
+        assertEq(gobblers.getUserEmissionMultiple(users[0]), gobblerMultiple);
+        vm.prank(address(gobblers));
+        uint256 additionAmount = 1000;
+        goo.mintForGobblers(users[0], additionAmount);
+        vm.prank(users[0]);
+        gobblers.addGoo(additionAmount);
+        assertEq(gobblers.gooBalance(users[0]), additionAmount);
+    }
+
     /// @notice Mint a number of gobblers to the given address
     function mintGobblerToAddress(address addr, uint256 num) internal {
         for (uint256 i = 0; i < num; ++i) {
