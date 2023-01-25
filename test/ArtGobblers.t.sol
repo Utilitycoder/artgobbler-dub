@@ -1056,6 +1056,20 @@ contract ArtGobblersTest is DSTestPlus {
         vm.stopPrank();
     }
 
+    function testCantFeed721As1155() public {
+        address user = users[0];
+        mintGobblerToAddress(user, 1);
+        uint256 pagePrice = pages.pagePrice();
+        vm.prank(address(gobblers));
+        goo.mintForGobblers(user, pagePrice);
+        vm.startPrank(user);
+        pages.mintFromGoo(type(uint256).max, false);
+        vm.expectRevert();
+        gobblers.gobble(1, address(pages), 1, true);
+    }
+
+    
+
     /// @notice Mint a number of gobblers to the given address
     function mintGobblerToAddress(address addr, uint256 num) internal {
         for (uint256 i = 0; i < num; ++i) {
