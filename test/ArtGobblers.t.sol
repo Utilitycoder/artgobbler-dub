@@ -924,6 +924,45 @@ contract ArtGobblersTest is DSTestPlus {
         console.log(gobblers.gooBalance(users[0]));
     }
 
+    /// @notice make sure that actions that trigger balance snapshotting do not affect total balance.
+    function testSnapshotDoesNotAffectBalance() public {
+        // mint one gobbler for each user
+        for (uint256 i = 0; i <= 1; i++) {
+            mintGobblerToAddress(users[i], 1);
+        }
+        vm.warp(block.timestamp + 1 days);
+        //give each user initial goo balance
+        vm.prank(address(gobblers));
+        goo.mintForGobblers(users[0], 100);
+        //reveal gobblers
+        bytes32 requestId = gobblers.requestRandomSeed();
+        uint256 randomness = 1022; // magic seed to ensure both gobblers have same multiplier
+        vrfCoordinator.callBackWithRandomness(requestId, randomness, address(randProvider));
+        gobblers.revealGobblers(2);
+        // make sure both gobblers have same multiple, and same starting balance.
+        assertGt(gobblers.getUserEmissionMultiple(users[0]), 0);
+        assertEq(gobblers.getUserEmissionMultiple(users[0]), gobblers.getUserEmissionMultiple(users[1]));
+        uint256 initialBalanceZero = gobblers.gooBalance(users[0]);
+        uint256 initialBalanceOne = gobblers.gooBalance(users[1]);
+        assertEq(initialBalanceZero, initialBalanceOne);
+        vm.warp(block.timestamp + 5 days);
+        //And remove one unit of goo to trigger snapshot
+        vm.startPrank(users[0]);  
+        gobblers.addGoo(1);
+        gobblers.removeGoo(1);
+        vm.stopPrank();
+        // One more time
+        vm.warp(block.timestamp + 5 days);
+        vm.startPrank(users[0]);  
+        gobblers.addGoo(1);
+        gobblers.removeGoo(1);
+        vm.stopPrank();
+        // make sure users gave equal balance 
+        vm.warp(block.timestamp + 5 days);
+        assertGt(gobblers.getUserEmissionMultiple(users[0]), initialBalanceZero);
+        assertEq(gobblers.gooBalance(users[0]), gobblers.gooBalance(users[1]));
+    }
+
     /// @notice Mint a number of gobblers to the given address
     function mintGobblerToAddress(address addr, uint256 num) internal {
         for (uint256 i = 0; i < num; ++i) {
