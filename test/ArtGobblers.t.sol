@@ -984,7 +984,27 @@ contract ArtGobblersTest is DSTestPlus {
 
         assertEq(gobblers.balanceOf(users[0]), 0);
         assertEq(gobblers.balanceOf(users[1]), 1);
+    }
 
+    /// @notice Test that gobbler balances are accurate after transfer.
+    function testGobblerBalancesAfterTransfer() public {
+        mintGobblerToAddress(users[0], 1);
+        vm.warp(block.timestamp + 1 days);
+        setRandomnessAndReveal(1, "seed");
+        vm.warp(block.timestamp + 100000);
+
+        uint256 userOneBalance = gobblers.gooBalance(users[0]);
+        uint256 userTwoBalance = gobblers.gooBalance(users[1]);
+        // user with gobbler should have a non-zero balance
+        assertGt(userOneBalance, 0);
+        // other user should have zero balance
+        assertEq(userTwoBalance, 0);
+        // transfer gobblers
+        vm.prank(users[0]);
+        gobblers.transferFrom(users[0], users[1], 1);
+        // balance should not change after transfer
+        assertEq(gobblers.gooBalance(users[0]), userOneBalance);
+        assertEq(gobblers.gooBalance(users[1]), userTwoBalance);
     }
 
     /// @notice Mint a number of gobblers to the given address
