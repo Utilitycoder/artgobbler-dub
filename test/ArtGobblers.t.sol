@@ -1105,6 +1105,22 @@ contract ArtGobblersTest is DSTestPlus {
         gobblers.gobble(1, address(token), 0, false);
     }
 
+    /////////////////////// LONG RUNNING TESTS //////////////////////
+
+    /// @notice Check that max supply is mintable
+    function testLongRunningMintMaxFromGoo() public {
+        uint256 maxMintableWithGoo = gobblers.MAX_MINTABLE();
+
+        for (uint256 i = 0; i < maxMintableWithGoo; ++i) {
+            vm.warp(block.timestamp + 1 days);
+            uint256 cost = gobblers.gobblerPrice();
+            vm.prank(address(gobblers));
+            goo.mintForGobblers(users[0], cost);
+            vm.prank(users[0]);
+            gobblers.mintFromGoo(type(uint256).max, false);
+        }
+    }
+
     /// @notice Mint a number of gobblers to the given address
     function mintGobblerToAddress(address addr, uint256 num) internal {
         for (uint256 i = 0; i < num; ++i) {
