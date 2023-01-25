@@ -947,20 +947,44 @@ contract ArtGobblersTest is DSTestPlus {
         assertEq(initialBalanceZero, initialBalanceOne);
         vm.warp(block.timestamp + 5 days);
         //And remove one unit of goo to trigger snapshot
-        vm.startPrank(users[0]);  
+        vm.startPrank(users[0]);
         gobblers.addGoo(1);
         gobblers.removeGoo(1);
         vm.stopPrank();
         // One more time
         vm.warp(block.timestamp + 5 days);
-        vm.startPrank(users[0]);  
+        vm.startPrank(users[0]);
         gobblers.addGoo(1);
         gobblers.removeGoo(1);
         vm.stopPrank();
-        // make sure users gave equal balance 
+        // make sure users gave equal balance
         vm.warp(block.timestamp + 5 days);
         assertGt(gobblers.getUserEmissionMultiple(users[0]), initialBalanceZero);
         assertEq(gobblers.gooBalance(users[0]), gobblers.gooBalance(users[1]));
+    }
+
+    /// @notice Test that emission multiple changes as expected after transfer.
+    function testEmissionMultipleUpdatesAfterTransfer() public {
+        mintGobblerToAddress(users[0], 1);
+        vm.warp(block.timestamp + 1 days);
+        setRandomnessAndReveal(1, "seed");
+
+        uint256 initialUserMultiple = gobblers.getUserEmissionMultiple(users[0]);
+        assertGt(initialUserMultiple, 0);
+        assertEq(gobblers.getUserEmissionMultiple(users[1]), 0);
+
+        assertEq(gobblers.balanceOf(users[0]), 1);
+        assertEq(gobblers.balanceOf(users[1]), 0);
+
+        vm.prank(users[0]);
+        gobblers.transferFrom(users[0], users[1], 1);
+
+        assertEq(gobblers.getUserEmissionMultiple(users[0]), 0);
+        assertEq(gobblers.getUserEmissionMultiple(users[1]), initialUserMultiple);
+
+        assertEq(gobblers.balanceOf(users[0]), 0);
+        assertEq(gobblers.balanceOf(users[1]), 1);
+
     }
 
     /// @notice Mint a number of gobblers to the given address
