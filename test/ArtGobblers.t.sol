@@ -898,7 +898,7 @@ contract ArtGobblersTest is DSTestPlus {
         mintGobblerToAddress(users[0], 1);
         assertEq(gobblers.getGobblerEmissionMultiple(1), 0);
         assertEq(gobblers.getUserEmissionMultiple(users[0]), 0);
-        // waiting after mint to reveal shouldn't affect balance 
+        // waiting after mint to reveal shouldn't affect balance
         vm.warp(block.timestamp + 100000);
         assertEq(gobblers.gooBalance(users[0]), 0);
         setRandomnessAndReveal(1, "seed");
@@ -911,6 +911,17 @@ contract ArtGobblersTest is DSTestPlus {
         vm.prank(users[0]);
         gobblers.addGoo(additionAmount);
         assertEq(gobblers.gooBalance(users[0]), additionAmount);
+    }
+
+    /// @notice Test that we can't add goo when we don't have the corresponding ERC20 balance.
+    function testCantAddMoreGooThanOwned() public {
+        mintGobblerToAddress(users[0], 1);
+        vm.warp(block.timestamp + 1 days);
+        setRandomnessAndReveal(1, "seed");
+        vm.prank(users[0]);
+        vm.expectRevert(stdError.arithmeticError);
+        gobblers.addGoo(10000);
+        console.log(gobblers.gooBalance(users[0]));
     }
 
     /// @notice Mint a number of gobblers to the given address
