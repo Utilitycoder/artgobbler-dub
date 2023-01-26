@@ -87,6 +87,96 @@ contract BenchmarksTest is DSTest {
         vrfCoordinator.callBackWithRandomness(requestId, randomness, address(randProvider));
     }
 
+    function testPagePrice() public view {
+        pages.pagePrice();
+    }
+
+    function testGobblerPrice() public view {
+        gobblers.gobblerPrice();
+    }
+
+    function testLegendaryGobblersPrice() public view {
+        gobblers.legendaryGobblerPrice();
+    }
+
+    function testGooBalances() public view {
+        gobblers.gooBalance(address(this));
+    }
+
+    function testMintPage() public {
+        pages.mintFromGoo(type(uint256).max, false);
+    }
+    
+    function testMintPageUsingVirtualBalance() public {
+        pages.mintFromGoo(type(uint256).max, true);
+    }
+
+    function testMintGobbler() public {
+        gobblers.mintFromGoo(type(uint256).max, false);
+    }
+
+    function testMintGobblerUsingVirtualBalance() public {
+        gobblers.mintFromGoo(type(uint256).max, true);
+    }
+
+    function testTransferGobbbler() public {
+        gobblers.transferFrom(address(this), address(0xBEEF), 1);
+    }
+
+    function testAddGoo() public {
+        gobblers.addGoo(1e18);
+    }
+
+    function testRemoveGoo() public {
+        gobblers.removeGoo(1e18);
+    }
+
+    function testRevealGobblers() public {
+        gobblers.revealGobblers(100);
+    }
+
+    function testMintLegendaryGobbler() public {
+        uint256 legendaryGobblerCost = legendaryCost;
+
+        uint256[] memory ids = new uint256[](legendaryGobblerCost);
+        for (uint256 i = 0; i < legendaryGobblerCost; i++) {
+            ids[i] = i + 1;
+        }
+
+        gobblers.mintLegendaryGobbler(ids);
+    }
+
+    function testMintReservedGobblers() public {
+        gobblers.mintReservedGobblers(1);
+    }
+
+    function testMintcommunityPages() public {
+        pages.mintCommunityPages(1);
+    }
+
+    function testDeployGobblers() public {
+        new ArtGobblers(
+            keccak256(abi.encodePacked(users[0])),
+            block.timestamp,
+            goo,
+            Pages(pageAddress),
+            address(0xBEEF),
+            address(0xBEEF),
+            randProvider,
+            "base",
+            "",
+            keccak256(abi.encodePacked("provenance"))
+        );
+    }
+
+    function testDeployGoo() public {
+        new Goo(gobblerAddress, pageAddress);
+    }
+
+    function testDeployPages() public {
+        new Pages(block.timestamp, goo, address(0xBEEF), gobblers, "");
+    }
+
     function mintGobblerToAddress(address addr, uint256 num) internal {
         for (uint256 i = 0; i < num; ++i) {
             vm.startPrank(address(gobblers));
