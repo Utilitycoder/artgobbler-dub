@@ -1069,7 +1069,7 @@ contract ArtGobblersTest is DSTestPlus {
     }
 
     function testFeeding1155() public {
-        address user =  users[0];
+        address user = users[0];
         mintGobblerToAddress(user, 1);
         MockERC1155 token = new MockERC1155();
         token.mint(user, 0, 1, "");
@@ -1117,6 +1117,25 @@ contract ArtGobblersTest is DSTestPlus {
             vm.prank(address(gobblers));
             goo.mintForGobblers(users[0], cost);
             vm.prank(users[0]);
+            gobblers.mintFromGoo(type(uint256).max, false);
+        }
+    }
+
+    /// @notice Check that minting beyond max supply should revert.
+    function testLongRunningMintMaxFromGooRevert() public {
+        uint256 maxMintableWithGoo = gobblers.MAX_MINTABLE();
+
+        for (uint256 i = 0; i < maxMintableWithGoo + 1; ++i) {
+            vm.warp(block.timestamp + 1 days);
+
+            if (i == maxMintableWithGoo) vm.expectRevert("UNDEFINED");
+            uint256 cost = gobblers.gobblerPrice();
+
+            vm.prank(address(gobblers));
+            goo.mintForGobblers(users[0], cost);
+            vm.prank(users[0]);
+
+            if (i == maxMintableWithGoo) vm.expectRevert("UNDEFINED");
             gobblers.mintFromGoo(type(uint256).max, false);
         }
     }
