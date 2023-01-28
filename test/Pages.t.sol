@@ -194,7 +194,13 @@ contract PagesTest is DSTestPlus {
         pages.mintFromGoo(type(uint256).max, false);
     }
 
-    
+    function testMintPriceExceededMax() public {
+        uint256 cost = pages.pagePrice();
+        goo.mintForGobblers(user, cost);
+        vm.prank(user);
+        vm.expectRevert(abi.encodeWithSelector(Pages.PriceExceededMax.selector, cost));
+        pages.mintFromGoo(cost - 1, false);
+    }
 
     /// @notice Mint a number of pages to the given address
     function mintPageToAddress(address addr, uint256 num) internal {
