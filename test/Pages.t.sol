@@ -188,6 +188,12 @@ contract PagesTest is DSTestPlus {
         assertRelApproxEq(finalPrice, targetPrice, 0.02e18);
     }
 
+    function testInsufficientBalance() public {
+        vm.prank(user);
+        vm.expectRevert(stdError.arithmeticError);
+        pages.mintFromGoo(type(uint256).max, false);
+    }
+
     
 
     /// @notice Mint a number of pages to the given address
