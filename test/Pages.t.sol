@@ -145,7 +145,7 @@ contract PagesTest is DSTestPlus {
 
     /// @notice Test that page pricing matches expected behavior before switch.
     function testPagePricingBeforeSwitch() public {
-        // Expected sales rate according to mathematical formula. 
+        // Expected sales rate according to mathematical formula.
         uint256 timeDelta = 60 days;
         uint256 numMint = 3572;
 
@@ -165,6 +165,30 @@ contract PagesTest is DSTestPlus {
         // If selling at target rate, final price should equal starting price
         assertRelApproxEq(targetPrice, finalPrice, 0.01e18);
     }
+
+    /// @notice Test that page pricing matches expected behavior after switch.
+    function testPagePricingAfterSwitch() public {
+        uint256 timeDelta = 360 days;
+        uint256 numMint = 9479;
+
+        vm.warp(block.timestamp + timeDelta);
+
+        uint256 targetPrice = uint256(pages.targetPrice());
+
+        for (uint256 i = 0; i < numMint; ++i) {
+            uint256 price = pages.pagePrice();
+            goo.mintForGobblers(user, price);
+            vm.prank(user);
+            pages.mintFromGoo(price, false);
+        }
+
+        uint256 finalPrice = pages.pagePrice();
+
+        // If selling at target rate, final price should equal starting price.
+        assertRelApproxEq(finalPrice, targetPrice, 0.02e18);
+    }
+
+    
 
     /// @notice Mint a number of pages to the given address
     function mintPageToAddress(address addr, uint256 num) internal {
