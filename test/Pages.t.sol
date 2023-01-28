@@ -38,13 +38,7 @@ contract PagesTest is DSTestPlus {
             utils.predictContractAddress(address(this), 1)
         );
 
-        pages = new Pages(
-            block.timestamp,
-            goo,
-            community,
-            ArtGobblers(address(this)), 
-            ""
-        );
+        pages = new Pages(block.timestamp, goo, community, ArtGobblers(address(this)), "");
 
         user = users[1];
     }
@@ -64,11 +58,98 @@ contract PagesTest is DSTestPlus {
     }
 
     function testTargetPrice() public {
-        // Warp to the target sale time so that the page price equals the target price. 
+        // Warp to the target sale time so that the page price equals the target price.
         vm.warp(block.timestamp + fromDaysWadUnsafe(pages.getTargetSaleTime(1e18)));
 
         uint256 cost = pages.pagePrice();
         assertRelApproxEq(cost, uint256(pages.targetPrice()), 0.00001e18);
     }
-    
+
+    function testMintCommunityPagesFailsWithNoMints() public {
+        vm.expectRevert(Pages.ReserveImbalance.selector);
+        pages.mintCommunityPages(1);
+    }
+
+    function testCanMintCommunity() public {
+        mintPageToAddress(user, 9);
+
+        pages.mintCommunityPages(1);
+        assertEq(pages.ownerOf(10), address(community));
+    }
+
+    function testCanMintMultipleCommunity() public {
+        mintPageToAddress(user, 90);
+
+        pages.mintCommunityPages(10);
+        assertEq(pages.ownerOf(91), address(community));
+        assertEq(pages.ownerOf(92), address(community));
+        assertEq(pages.ownerOf(93), address(community));
+        assertEq(pages.ownerOf(94), address(community));
+        assertEq(pages.ownerOf(95), address(community));
+        assertEq(pages.ownerOf(96), address(community));
+        assertEq(pages.ownerOf(97), address(community));
+        assertEq(pages.ownerOf(98), address(community));
+        assertEq(pages.ownerOf(99), address(community));
+        assertEq(pages.ownerOf(100), address(community));
+
+        assertEq(pages.numMintedForCommunity(), 10);
+        assertEq(pages.currentId(), 100);
+
+        // Ensure id doesn't get messed up.
+        mintPageToAddress(user, 1);
+        assertEq(pages.ownerOf(101), user);
+        assertEq(pages.currentId(), 101);
+    }
+
+    function testCantMintTooFastCommunity() public {
+        mintPageToAddress(user, 18);
+
+        vm.expectRevert(Pages.ReserveImbalance.selector);
+        pages.mintCommunityPages(3);
+    }
+
+    function testCantMintTooFastCommunityOneByOne() public {
+        mintPageToAddress(user, 90);
+
+        pages.mintCommunityPages(1);
+        pages.mintCommunityPages(1);
+        pages.mintCommunityPages(1);
+        pages.mintCommunityPages(1);
+        pages.mintCommunityPages(1);
+        pages.mintCommunityPages(1);
+        pages.mintCommunityPages(1);
+        pages.mintCommunityPages(1);
+        pages.mintCommunityPages(1);
+        pages.mintCommunityPages(1);
+
+        vm.expectRevert(Pages.ReserveImbalance.selector);
+        pages.mintCommunityPages(1);
+    }
+
+    /// @notice Test that the pricing switch does not significantly slow down or speed up the issuance of pages.
+    function testSwitchSmoothness() public {
+        uint256 switchPageSaleTime = uint256(pages.getTargetSaleTime(8337e18) - pages.getTargetSaleTime(8336e18));
+
+        assertRelApproxEq(
+            uint256(pages.getTargetSaleTime(8336e18) - pages.getTargetSaleTime(8335e18)),
+            switchPageSaleTime,
+            0.0005e18
+        );
+
+        assertRelApproxEq(
+            switchPageSaleTime,
+            uint256(pages.getTargetSaleTime(8338e18) - pages.getTargetSaleTime(8337e18)),
+            0.005e18
+        );
+    }
+
+    /// @notice Mint a number of pages to the given address
+    function mintPageToAddress(address addr, uint256 num) internal {
+        for (uint256 i = 0; i < num; ++i) {
+            goo.mintForGobblers(addr, pages.pagePrice());
+
+            vm.prank(addr);
+            pages.mintFromGoo(type(uint256).max, false);
+        }
+    }
 }
