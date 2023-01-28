@@ -57,6 +57,14 @@ contract PagesTest is DSTestPlus {
         pages.mintFromGoo(type(uint256).max, false);
     }
 
+    function testRegularMint() public {
+        vm.warp(block.timestamp - 1);
+
+        vm.expectRevert(stdError.arithmeticError);
+        vm.prank(user);
+        pages.mintFromGoo(type(uint256).max, false);
+    }
+
     function testTargetPrice() public {
         // Warp to the target sale time so that the page price equals the target price.
         vm.warp(block.timestamp + fromDaysWadUnsafe(pages.getTargetSaleTime(1e18)));
