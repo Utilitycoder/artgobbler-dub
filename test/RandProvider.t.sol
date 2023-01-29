@@ -104,7 +104,7 @@ contract RandProviderTest is DSTestPlus {
 
     function testRandomnessIsFulfilled() public {
         //Initially, randomness should be 0
-        (uint64 randomSeed, , , ,) = gobblers.gobblerRevealsData();
+        (uint64 randomSeed, , , , ) = gobblers.gobblerRevealsData();
         assertEq(randomSeed, 0);
         mintGobblerToAddress(users[0], 1);
         vm.warp(block.timestamp + 1 days);
@@ -116,7 +116,31 @@ contract RandProviderTest is DSTestPlus {
         assertEq(randomSeed, uint64(randomness));
     }
 
-    function testOnlyGobblersCanRequestRandomness() 
+    function testOnlyGobblersCanRequestRandomness() public {
+        vm.expectRevert(ChainlinkV1RandProvider.NotGobblers.selector);
+        randProvider.requestRandomBytes();
+    }
+
+    function testRandomnessIsOnlyUpgradableByOwner() public {
+        RandProvider newProvider = new ChainlinkV1RandProvider(ArtGobblers(address(0)), address(0), address(0), 0, 0);
+        vm.expectRevert("UNAUTHORIZED");
+        vm.prank(address(0xBEEFBABE));
+        gobblers.upgradeRandProvider(newProvider);
+    }
+
+    function testRandomnessIsUpgradable() public {
+        mintGobblerToAddress(users[0], 1);
+        vm.warp(block.timestamp + 1 days);
+        // initial address is correct
+        assertEq(address(gobblers.randProvider()), address(randProvider));
+
+        RandProvider newProvider = new ChainlinkV1RandProvider(ArtGobblers(address(0)), address(0), address(0), 0, 0);
+        gobblers.upgradeRandProvider(newProvider);
+        // final address is correct
+        assertEq(address(gobblers.randProvider()), address(randProvider));
+    }
+
+    
 
     /*//////////////////////////////////////////////////////////////
                                  HELPERS
