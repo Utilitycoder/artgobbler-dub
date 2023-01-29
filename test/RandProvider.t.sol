@@ -137,7 +137,7 @@ contract RandProviderTest is DSTestPlus {
         RandProvider newProvider = new ChainlinkV1RandProvider(ArtGobblers(address(0)), address(0), address(0), 0, 0);
         gobblers.upgradeRandProvider(newProvider);
         // final address is correct
-        assertEq(address(gobblers.randProvider()), address(randProvider));
+        assertEq(address(gobblers.randProvider()), address(newProvider));
     }
 
     function testRandomnessIsResetWithPendingSeed() public {
