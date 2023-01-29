@@ -104,10 +104,19 @@ contract RandProviderTest is DSTestPlus {
 
     function testRandomnessIsFulfilled() public {
         //Initially, randomness should be 0
-        (uint64 randomSeed, , , ,) = gobblers.GobblersRevealsData();
+        (uint64 randomSeed, , , ,) = gobblers.gobblerRevealsData();
         assertEq(randomSeed, 0);
         mintGobblerToAddress(users[0], 1);
+        vm.warp(block.timestamp + 1 days);
+        bytes32 requestId = gobblers.requestRandomSeed();
+        uint256 randomness = uint256(keccak256(abi.encodePacked("seed")));
+        vrfCoordinator.callBackWithRandomness(requestId, randomness, address(randProvider));
+        // randomness from vrf should be set in gobblers contract
+        (randomSeed, , , , ) = gobblers.gobblerRevealsData();
+        assertEq(randomSeed, uint64(randomness));
     }
+
+    function testOnlyGobblersCanRequestRandomness() 
 
     /*//////////////////////////////////////////////////////////////
                                  HELPERS
