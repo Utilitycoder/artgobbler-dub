@@ -642,12 +642,7 @@ contract ArtGobblers is GobblersERC721, LogisticVRGDA, Owned, ERC1155TokenReceiv
     /// @param nft The ERC721 or ERC1155 contract of the work of art.
     /// @param id The id of the work of art.
     /// @param isERC1155 Whether the work of art is an ERC1155 token.
-    function gobble(
-        uint256 gobblerId,
-        address nft,
-        uint256 id,
-        bool isERC1155
-    ) external {
+    function gobble(uint256 gobblerId, address nft, uint256 id, bool isERC1155) external {
         // Get the owner of the gobbler to feed.
         address owner = getGobblerData[gobblerId].owner;
 
@@ -732,11 +727,7 @@ contract ArtGobblers is GobblersERC721, LogisticVRGDA, Owned, ERC1155TokenReceiv
     /// @param user The user whose virtual goo balance we should update.
     /// @param gooAmount The amount of goo to update the user's virtual balance by.
     /// @param updateType Whether to increase or decrease the user's balance by gooAmount.
-    function updateUserGooBalance(
-        address user,
-        uint256 gooAmount,
-        GooBalanceUpdateType updateType
-    ) internal {
+    function updateUserGooBalance(address user, uint256 gooAmount, GooBalanceUpdateType updateType) internal {
         // Will revert due to underflow if we're decreasing by more than the user's current balance.
         // Don't need to do checked addition in the increase case, but we do it anyway for convenience.
         uint256 updatedBalance = updateType == GooBalanceUpdateType.INCREASE
@@ -799,11 +790,7 @@ contract ArtGobblers is GobblersERC721, LogisticVRGDA, Owned, ERC1155TokenReceiv
                               ERC721 LOGIC
     //////////////////////////////////////////////////////////////*/
 
-    function transferFrom(
-        address from,
-        address to,
-        uint256 id
-    ) public override {
+    function transferFrom(address from, address to, uint256 id) public override {
         require(from == getGobblerData[id].owner, "WRONG_FROM");
 
         require(to != address(0), "INVALID_RECIPIENT");
