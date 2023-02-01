@@ -69,9 +69,9 @@ contract RandProviderTest is DSTestPlus {
 
         goo = new Goo(
             //Gobblers:
-            utils.predictContractAddress(address(this), 1),
+            address(gobblerAddress),
             // Pages:
-            utils.predictContractAddress(address(this), 2)
+            address(pages)
         );
 
         gobblers = new ArtGobblers(
