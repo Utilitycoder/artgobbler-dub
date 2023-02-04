@@ -75,6 +75,23 @@ contract ForkTest is Test {
 
             vm.selectFork(polygonFork);
             simple.value();
-
         }
+
+        /// @notice create a new persistent contract while fork is active
+        function testCreatePersistentContract() public {
+            vm.selectFork(mainnetFork);
+            SimpleStorageContract simple = new SimpleStorageContract();
+            simple.set(100);
+            assertEq(simple.value(), 100);
+
+            vm.makePersistent(address(simple));
+            assert(vm.isPersistent(address(simple)));
+
+            vm.selectFork(polygonFork);
+            assert(vm.isPersistent(address(simple)));
+
+            assertEq(simple.value(), 100);
+        }
+
+
 }
