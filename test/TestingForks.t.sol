@@ -4,6 +4,15 @@ pragma solidity >=0.8.0;
 import {Test} from "forge-std/Test.sol";
 import {console} from "./utils/Console.sol";
 
+contract SimpleStorageContract {
+    uint256 public value;
+
+    function set(uint256 _value) public {
+        value = _value;
+    }
+
+}
+
 contract ForkTest is Test {
     uint256 internal mainnetFork;
     uint256 internal polygonFork;
@@ -53,5 +62,19 @@ contract ForkTest is Test {
             vm.rollFork(1337000);
     
             assertEq(block.number, 1337000);
+        }
+
+        function testFailCreateContract() public {
+            vm.selectFork(mainnetFork);
+            assertEq(vm.activeFork(), mainnetFork);
+
+            SimpleStorageContract simple = new SimpleStorageContract();
+
+            simple.set(100);
+            assertEq(simple.value(), 100);
+
+            vm.selectFork(polygonFork);
+            simple.value();
+
         }
 }
