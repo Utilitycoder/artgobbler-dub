@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.8.0;
+pragma solidity >=0.8.18;
 
 import {DSTestPlus} from "solmate/test/utils/DSTestPlus.sol";
 import {Utilities} from "./utils/Utilities.sol";
@@ -1173,6 +1173,11 @@ contract ArtGobblersTest is DSTestPlus {
 
         vm.expectRevert(ArtGobblers.ReserveImbalance.selector);
         gobblers.mintReservedGobblers(1);
+    }
+
+    function testPrevrandao() public {
+        uint256 randomness = block.prevrandao;
+        console.log(randomness);
     }
 
     ///////////////////////// HELPERS //////////////////////////

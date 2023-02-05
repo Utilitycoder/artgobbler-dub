@@ -65,6 +65,7 @@ contract ForkTest is Test {
         }
 
         function testFailCreateContract() public {
+            // Select fork and confirm it is active
             vm.selectFork(mainnetFork);
             assertEq(vm.activeFork(), mainnetFork);
 
@@ -92,6 +93,4 @@ contract ForkTest is Test {
 
             assertEq(simple.value(), 100);
         }
-
-
 }
