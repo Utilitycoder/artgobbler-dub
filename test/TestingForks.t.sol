@@ -13,6 +13,42 @@ contract SimpleStorageContract {
 
 }
 
+contract Safe {
+    receive() external payable {}
+
+    function withdraw() external {
+        payable(msg.sender).transfer(address(this).balance);
+    }
+}
+
+contract SafeTest is Test {
+    Safe safe;
+
+    receive() external payable {}
+
+    function setUp() public {
+        safe = new Safe();        
+    }
+    // Non-fuzz testing
+    function testWithdraw() public {
+        payable(address(safe)).transfer(1 ether);
+        uint256 preBalance = address(this).balance;
+        safe.withdraw();
+        uint256 postBalance = address(this).balance;
+        assertEq(preBalance + 1 ether, postBalance);
+    }
+
+    //Fuzz testing
+    /// @param amount fails if we use uint256 because of overflow so we use uint 98 instead
+    function testWithdrawFuzz(uint96 amount) public {
+        payable(address(safe)).transfer(amount);
+        uint256 preBalance = address(this).balance;
+        safe.withdraw();
+        uint256 postBalance = address(this).balance;
+        assertEq(preBalance + amount, postBalance);
+    }
+}
+
 contract ForkTest is Test {
     uint256 internal mainnetFork;
     uint256 internal polygonFork;
