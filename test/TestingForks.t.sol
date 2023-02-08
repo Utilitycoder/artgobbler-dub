@@ -3,6 +3,7 @@ pragma solidity >=0.8.0;
 
 import {Test} from "forge-std/Test.sol";
 import {console} from "./utils/Console.sol";
+import {Utilities} from "./utils/Utilities.sol";
 
 contract SimpleStorageContract {
     uint256 public value;
@@ -10,7 +11,17 @@ contract SimpleStorageContract {
     function set(uint256 _value) public {
         value = _value;
     }
+}
 
+contract Testfii is Test {
+    function testffi() public {
+        string[] memory cmds = new string[](2);
+        cmds[0] = "cat";
+        cmds[1] = "address.txt";
+        bytes memory result = vm.ffi(cmds);
+        address loadedAddress = abi.decode(result, (address));
+        console.log(loadedAddress);
+    }
 }
 
 contract Safe {
@@ -23,11 +34,15 @@ contract Safe {
 
 contract SafeTest is Test {
     Safe safe;
+    Utilities internal utils;
 
     receive() external payable {}
 
     function setUp() public {
-        safe = new Safe();        
+        safe = new Safe();
+        // utils = new Utilities();
+        // address payable[] memory users = utils.createUsers(1);
+        // console.log(users);
     }
     // Non-fuzz testing
     function testWithdraw() public {
