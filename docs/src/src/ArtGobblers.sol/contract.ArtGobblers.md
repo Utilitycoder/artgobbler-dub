@@ -2,7 +2,7 @@
 [Git Source](https://github.com/Utilitycoder/artgobbler-dub/blob/3c22f2fc754088c788fa1c2d53754e6ba88dfed3/src/ArtGobblers.sol)
 
 **Inherits:**
-[GobblersERC721](/docs/src/utils/token/GobblersERC721.sol/contract.GobblersERC721.md), LogisticVRGDA, Owned, ERC1155TokenReceiver
+[GobblersERC721](/docs/src/src/utils/token/GobblersERC721.sol/contract.GobblersERC721.md), LogisticVRGDA, Owned, ERC1155TokenReceiver
 
 
 ## State Variables
