@@ -14,6 +14,15 @@ abstract contract GobblersERC721 {
 
     event ApprovalForAll(address indexed owner, address indexed operator, bool approved);
 
+    ////// ERRORS //////
+
+    error NotMinted();
+    error ZeroAddress();
+    error NotAuthorized();
+    error WrongFrom();
+    error InvalidRecipient();
+    error UnsafeRecipient();
+
     ////// METADATA STORAGE / LOGIC
 
     string public name;
@@ -52,11 +61,11 @@ abstract contract GobblersERC721 {
     mapping(address => UserData) public getUserData;
 
     function ownerOf(uint256 id) external view returns (address owner) {
-        require((owner = getGobblerData[id].owner) != address(0), "NOT_MINTED");
+        if ((owner = getGobblerData[id].owner) == address(0)) revert NotMinted();
     }
 
     function balanceOf(address owner) external view returns (uint256) {
-        require(owner != address(0), "ZERO_ADDRESS");
+        if (owner == address(0)) revert ZeroAddress();
 
         return getUserData[owner].gobblersOwned;
     }
@@ -79,7 +88,7 @@ abstract contract GobblersERC721 {
     function approve(address spender, uint256 id) external {
         address owner = getGobblerData[id].owner;
 
-        require(msg.sender == owner || isApprovedForAll[owner][msg.sender], "NOT_AUTHORIZED");
+        if (msg.sender != owner && !isApprovedForAll[owner][msg.sender]) revert NotAuthorized();
 
         getApproved[id] = spender;
 
@@ -105,12 +114,11 @@ abstract contract GobblersERC721 {
     ) external {
         transferFrom(from, to, id);
 
-        require(
-            to.code.length == 0 ||
-                ERC721TokenReceiver(to).onERC721Received(msg.sender, from, id, "") ==
-                ERC721TokenReceiver.onERC721Received.selector,
-            "UNSAFE_RECIPIENT"
-        );
+        if (
+            to.code.length != 0 &&
+            ERC721TokenReceiver(to).onERC721Received(msg.sender, from, id, "") !=
+                ERC721TokenReceiver.onERC721Received.selector
+        ) revert UnsafeRecipient();
     }
 
     function safeTransferFrom(
@@ -121,12 +129,11 @@ abstract contract GobblersERC721 {
     ) external {
         transferFrom(from, to, id);
 
-        require(
-            to.code.length == 0 ||
-                ERC721TokenReceiver(to).onERC721Received(msg.sender, from, id, data) ==
-                ERC721TokenReceiver.onERC721Received.selector,
-            "UNSAFE_RECIPIENT"
-        );
+        if (
+            to.code.length != 0 &&
+            ERC721TokenReceiver(to).onERC721Received(msg.sender, from, id, data) !=
+                ERC721TokenReceiver.onERC721Received.selector
+        ) revert UnsafeRecipient();
     }
 
     /////// ERC165 LOGIC ////////////////////////
